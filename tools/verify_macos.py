@@ -153,6 +153,7 @@ def main() -> int:
     check_week_shift(data)
     check_live_pay(data)
     check_pay_amount(data)
+    check_pay_conditions(data)
 
     check(re.search(rb"ca-app-pub-[0-9]{16}/[0-9]{10}", data) is None, "no ad unit id")
     check(
@@ -462,6 +463,31 @@ def overtime_minutes(slice_minutes: float, prior: float, threshold: float) -> fl
     return extra if extra > 0 else 0
 
 
+def check_pay_conditions(data: bytes) -> None:
+    for off, word in (
+        (0x262B08, 0xB9803708),
+        (0x262C24, 0x9114A108),
+        (0xDE904, 0xB9801908),
+        (0xDE908, 0xF8686AB3),
+        (0x11A648, 0x35FFFE09),
+        (0x11A83C, 0xF100067F),
+        (0x11A840, 0x540018EB),
+        (0x11A850, 0xFD001360),
+        (0x119734, 0xF81083A0),
+        (0x11A7B8, 0x7100051F),
+    ):
+        got = struct.unpack_from("<I", data, off)[0]
+        check(got == word, f"pay-condition word at {off:#x}")
+    for off, pc, expect, label in (
+        (0x262AF8, 0x100262AF8, 0x1003FE978, "shift start <="),
+        (0x262B14, 0x100262B14, 0x1003FCD4C, "gate < end"),
+        (0x262CC4, 0x100262CC4, 0x1003FD3B8, "TimelineView.init"),
+        (0xDE848, 0x1000DE848, 0x1003FE978, "wage day <="),
+    ):
+        got = branch_target(struct.unpack_from("<I", data, off)[0], pc)
+        check(got == expect, f"{label} at {got:#x}")
+
+
 def macos_tools() -> None:
     if not Path("/usr/bin/sw_vers").exists():
         print("macOS tools skipped (not macOS)")
@@ -517,6 +543,7 @@ def macos_tools() -> None:
             "PayRounding.swift",
             "LiveScale.swift",
             "PayAmount.swift",
+            "PayConditions.swift",
         ):
             proc = subprocess.run([swift, str(ROOT / "tests" / name)], text=True, capture_output=True)
             print((proc.stdout or "") + (proc.stderr or ""))

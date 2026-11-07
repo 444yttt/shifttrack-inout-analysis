@@ -417,4 +417,64 @@ extension InOutRecovered {
     static func liveNumericTotal(base: Double, premium: Double) -> Double {
         base + premium
     }
+
+    /// 0x100262af8 and 0x100262b14, in `WorkplaceListView`'s builder
+    /// 0x1002616f4. The 1-second timeline is created only when
+    /// `start <= gate && gate < end`. Neither compare writes start or end.
+    /// `gate` is a date threaded from 0x100260e08. That function was not
+    /// reduced to `Date()` or `TimelineView.Context.date`.
+    static func showsOneSecondPayTimeline(start: Date, end: Date, gate: Date) -> Bool {
+        start <= gate && gate < end
+    }
+
+    /// 0x1000de424. Walks `wageHistory` from the last element backward.
+    /// `effectiveFrom` is reduced to a calendar day and compared with
+    /// `startOfDay` of the shift date (`Date.<=` at 0x1000de848).
+    /// The first rate for which that day is <= the shift day supplies
+    /// `hourlyWage` (metadata +0x18). An empty history returns 0.
+    /// The path where every rate is after the shift day was not reduced.
+    static func selectedHourlyWage(
+        shiftDate: Date,
+        history: [(effectiveFrom: Date, hourlyWage: Int)],
+        calendar: Calendar = .current
+    ) -> Int? {
+        if history.isEmpty {
+            return 0
+        }
+        let shiftDay = calendar.startOfDay(for: shiftDate)
+        for rate in history.reversed() {
+            let parts = calendar.dateComponents([.year, .month, .day], from: rate.effectiveFrom)
+            guard let rateDay = calendar.date(from: parts) else { continue }
+            if rateDay <= shiftDay {
+                return rate.hourlyWage
+            }
+        }
+        return nil
+    }
+
+    /// Transport items in 0x100119384. `unit == perPeriod` (2) is skipped.
+    /// `kind` must be transport (0); allowance and deduction do not reach
+    /// this add. `condition == nightWork` (1) requires
+    /// `ShiftPay.nightMinutes > 0`. `amount >= 1` is added once to
+    /// `PayResult.transport`. perDay reaches the same add after further
+    /// checks that were not reduced, so this does not encode "once per day".
+    static func transportAfterPayItem(
+        transport: Double,
+        kind: Int,
+        unit: Int,
+        amount: Int,
+        condition: Int,
+        nightMinutes: Double
+    ) -> Double {
+        if unit == 2 || kind != 0 {
+            return transport
+        }
+        if condition == 1 && !(nightMinutes > 0) {
+            return transport
+        }
+        if amount < 1 {
+            return transport
+        }
+        return transport + Double(amount)
+    }
 }

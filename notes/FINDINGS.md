@@ -147,15 +147,19 @@ Ghidra の疑似コードも `field + 0x14 < 引数` と、より大きい `over
 
 同じ `0x10026e844` は金額を計算しない。`end.timeIntervalSince(start) <= 0` なら 0、そうでなければ `frinta(asOf の経過秒 * ShiftInstance.breakMinutes / 全体秒)` を `WorkRecord.breakMinutes` に書く。asOf は `shiftEnd < now` のとき終了、そうでなければ now。start/end は予定のまま。
 
-`0x10011b1d0` はそのレコードを `x0` で受け、start から end を 60 秒ずつ進める。`now` を end に書く命令は無い。BreakSpan が無ければ支払分は `max(0, 全体分 - breakMinutes)` で、円は `支払分 * 時給 / 60` を `PayResult.base` に足す。時給はバンドの中なら `WageBand.hourlyWage`、そうでなければ `0x1000de424` の戻り。深夜窓の中だけ `premium += その分の基本給 * nightRate / 100`。ただしバンドが `includesNightPremium` なら足さない。残業は threshold を超えた分だけ `premium += 残業分 * 時給 / 60 * rate / 100`。休日は `weekday - 1` の率で同じ形。日給はエンジンでは乗算せず、`0x100119384` が `daily` かつ未命名の下位ビットが 1 のとき `dailyWage` を base に足す。表示は `0x10026ecf0` の base + premium を `ContentTransition.numericText` に渡す。
+上流は勤務先一覧である。`0x1002616f4` は `start <= 日付 < end` のときだけ 1 秒の `TimelineView` を作り、クロージャ `0x100276528` が `0x10026e844` へ分岐する。比較は start/end を書き戻さない。`0x100267318` は「はじまりまで あと」「終わりまで あと」で、給与の日付ではない。ゲートの日付は `0x100260e08` の戻りで、`now` とは確定していない。休憩按分が読む `Context.date` は、その 1 秒タイムラインの中である。
+
+`0x10011b1d0` はそのレコードを `x0` で受け、コピーされた start から end を 60 秒ずつ進める。`min(now, end)` の書き込みはこの経路に無い。BreakSpan が無ければ支払分は `max(0, 全体分 - breakMinutes)` で、円は `支払分 * 時給 / 60` を `PayResult.base` に足す。8時間・休憩30・時給1000なら計算上 7500 だが、これは画面の読取りではない。時給履歴は `0x1000de424` が末尾から、effectiveFrom の日付がシフト日の startOfDay 以下の最初の `hourlyWage` を返す。日給は `UUID.==` が真のとき base に足し、偽なら「日給」を `dayItemsElsewhere` に足す。交通の支給項目は amount が 1 以上なら transport に一度足す。perPeriod と、transport 以外の kind はこの加算に来ない。nightWork は `nightMinutes > 0` が必要。手当と控除の加算は見つかっていない。表示は base + premium の `numericText` に「円」が付く。
 
 `selectedBreakMinutes` は上の比較だけ。分数の作り方は含めていない。境界は `tests/BreakSelection.swift`。法定の (360, 45), (480, 60) では 360 分は 0、361 分は 45、480 分は 45、481 分は 60。
 
 ## 未回収のまま残しているもの
 
 - 日給加算の下位ビットのフィールド名
-- `PayItem` の perShift / perDay の金額。交通の `ExtraPayItem` を `PayResult.transport` に足すことと、`perPeriod` を飛ばすことだけ確認した
-- 手当と控除。live の `numericText` は base + premium で、この2つは入らない
+- perDay の前にある UUID と回数。通過後は transport への整数一回加算
+- 手当と控除の加算。live の `numericText` は base + premium で、この2つは入らない
+- ゲート日付が `now` か。履歴が日付順か。全部の時給がシフト日より後のときの戻り
+- 7500円の画面観察。単体テストは式の入力と出力だけである
 - 勤務中の Timeline `by` が 30 秒か 1 秒か。60 秒は金額ループの刻みであり、画面の更新周期ではない
 - 年収の壁の閾値判定。画面文字列と `IncomeWall` のフィールドはある。比較関数は特定していない
 - 週送りの「オフセットを ±1 するボタン」自体。日数への変換は `0x10020499c` で回収済み
