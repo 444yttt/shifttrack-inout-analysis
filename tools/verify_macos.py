@@ -249,6 +249,26 @@ def check_break_selection(data: bytes) -> None:
     for minutes, rules, expect in cases:
         got = selected_break_minutes(minutes, rules)
         check(got == expect, f"break {minutes} {rules} -> {got} expected {expect}")
+    bl = struct.unpack_from("<I", data, 0x1B8A44)[0]
+    target = branch_target(bl, 0x1001B8A44)
+    check(target == 0x1000E967C, f"editor caller reaches selector at {target:#x}")
+    for off, word in ((0x1B8870, 0xEB08033A), (0x1B8A3C, 0x9A880120), (0x1B8818, 0xB9802C08), (0x1B8850, 0xB9802AE8)):
+        got = struct.unpack_from("<I", data, off)[0]
+        check(got == word, f"editor-minute word at {off:#x}")
+    for start, end, expect in ((540, 1020, 480), (1320, 360, 480), (100, 100, 1440), (100, 99, 1439), (0, 1, 1)):
+        got = editor_minute_count(start, end)
+        check(got == expect, f"editor {start}->{end} = {got} expected {expect}")
+    for seconds, expect in ((3599.9, 59), (3600.0, 60), (60.0, 1), (59.9, 0), (-1.0, 0), (-119.0, -1)):
+        got = int(seconds / 60.0)  # toward zero, matching fcvtzs
+        check(got == expect, f"trunc {seconds}s -> {got} expected {expect}")
+
+
+def editor_minute_count(start: int, end: int) -> int:
+    difference = end - start
+    remainder = difference % 1440
+    if remainder < 0:
+        remainder += 1440
+    return 1440 if remainder == 0 else remainder
 
 
 def macos_tools() -> None:
@@ -298,7 +318,7 @@ def macos_tools() -> None:
         print("dyld_info not on PATH; format 6 was checked from the Mach-O header")
     swift = shutil.which("swift")
     if swift:
-        for name in ("WeekShift.swift", "BreakSelection.swift"):
+        for name in ("WeekShift.swift", "BreakSelection.swift", "MinuteInputs.swift"):
             proc = subprocess.run([swift, str(ROOT / "tests" / name)], text=True, capture_output=True)
             print((proc.stdout or "") + (proc.stderr or ""))
             check(proc.returncode == 0, f"swift tests/{name}")

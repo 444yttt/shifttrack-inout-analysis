@@ -144,7 +144,8 @@ enum InOutRecovered {
     /// `overMinutes`; an equal value does not replace the earlier rule
     /// (`cmp` / `b.ge` at 0x1000e9904). Returns that rule's `breakMinutes`
     /// (metadata field +0x18). No match, or an empty list, returns 0.
-    /// This does not compute `minutes`. Callers prepare it differently.
+    /// This does not compute `minutes`. The two callers prepare it differently;
+    /// do not pick one and use it as payslip minutes.
     static func selectedBreakMinutes(_ minutes: Int, rules: [RecoveredBreakRule]) -> Int {
         var best: RecoveredBreakRule?
         for rule in rules where rule.overMinutes < minutes {
@@ -154,5 +155,27 @@ enum InOutRecovered {
             best = rule
         }
         return best?.breakMinutes ?? 0
+    }
+
+    /// Caller `0x1001b8770` of the selector, for `ShiftEntryEditor`.
+    /// Field-offset vector starts at metadata byte `0x10`. `+0x2c` is `_endMinute`
+    /// and `+0x28` is `_startMinute`, both read with `State.wrappedValue`.
+    /// `subs` at `0x1001b8870` is end minus start (overflow traps).
+    /// The signed remainder of division by 1440 is made non-negative.
+    /// A zero remainder, including equal minutes, becomes 1440.
+    /// This is the editor input, not a payslip duration.
+    static func editorMinuteCount(startMinute: Int, endMinute: Int) -> Int {
+        let difference = endMinute - startMinute
+        let remainder = difference % 1440
+        let positive = remainder < 0 ? remainder + 1440 : remainder
+        return positive == 0 ? 1440 : positive
+    }
+
+    /// Caller `0x1001cee68` divides the `Double` from `Date.timeIntervalSince`
+    /// by 60 and truncates toward zero (`fcvtzs` at `0x1001cf700`).
+    /// Which date is the receiver is not identified, so this is only the
+    /// conversion of a seconds value the caller already has.
+    static func truncatedMinutes(towardZero seconds: Double) -> Int {
+        Int(seconds / 60.0)
     }
 }
