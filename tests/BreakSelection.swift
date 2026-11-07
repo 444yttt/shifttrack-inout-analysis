@@ -20,8 +20,7 @@ func selectedBreakMinutes(_ minutes: Int, rules: [Rule]) -> Int {
 
 func expect(_ condition: Bool, _ message: String) {
     if !condition {
-        fputs("FAIL \(message)\n", stderr)
-        exit(1)
+        fatalError(message)
     }
 }
 
