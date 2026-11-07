@@ -1,0 +1,17 @@
+# SwiftUI.View body thunks. Each thunk is a single B to the body.
+# Addresses are the preferred Mach-O vmaddr (image base 0x100000000).
+# These are locations in bin/IN-OUT, not original source symbols (the symbol table is stripped).
+
+witness	body	note
+0x100071b20	0x1000541dc	CalendarTabView.body (6536 bytes)
+0x100028500	0x100027b88	SlotTimePicker.body (892 bytes)
+0x100048f9c	0x10003cdd8	CalendarDayView.body (4608 bytes)
+0x1000ba040	0x1000b2154	IncomeView.body (2316 bytes)
+0x1000c0280	0x1000bc9b8	WallEditorView.body (1536 bytes)
+
+# Imports demangled on macOS by tools/verify_macos.py. Not app-secret.
+_$s7SwiftUI4ViewMp
+_$s10Foundation8CalendarV4date8byAdding5value2to18wrappingComponentsAA4DateVSgAC9ComponentO_SiAJSbtF
+_$s10Foundation8CalendarV4date13bySettingHour6minute6second2of14matchingPolicy012repeatedTimeK09directionAA4DateVSgSi_S2iAmC08MatchingK0OAC08RepeatedmK0OAC15SearchDirectionOtF
+_$s10Foundation8CalendarV9ComponentO3dayyA2EmFWC
+_$s10Foundation8CalendarV9ComponentO5monthyA2EmFWC
