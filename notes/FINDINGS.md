@@ -143,17 +143,20 @@ Ghidra の疑似コードも `field + 0x14 < 引数` と、より大きい `over
 
 `0x1001240fc` は `BreakSpan`（`0x10043fcec`）の配列に対し、秒/60 を `frinta`（最近傍、0 から遠い側へのタイ）して負を 0 に潰し、合計する。`end` のアドレスは計算するが引数レジスタに載せていない。`PayRounding` の unit/start/end ではない。給与の丸めとしては使わない。
 
-`PayRounding` の記述子 `0x10043fe94` をコードから adrp している箇所は無く、アクセサ `0x10013554c` への BL も無い。丸めの適用関数と、時給から金額を出す式は、この探索では特定していない。
+`PayRounding` の記述子を adrp する箇所と、アクセサ `0x10013554c` への BL は、以前の探索のとおり無かった。適用は別の入口から見つかった。`TimelineView.Context.date` を読む `0x10026e844` が `0x10011dc04` → `0x10011d530` → `0x100119384` → `0x10011b1d0` を呼ぶ。`0x10011b1d0` は `PayTerms` の field 6（metadata +0x28、`rounding`）から `unitMinutes` と方向バイト +8/+9 を読む。`unitMinutes < 2` またはバイト 0 なら日付をコピーする。そうでなければ `unitMinutes * 60`（検査付き）で `startOfDay` からの秒を割り、1 なら `frintp`、2 なら `frintm`、それ以外は `frinta` して `addingTimeInterval` で戻す。`RoundingDirection` の並びは exact, up, down, nearest。
+
+同じ `0x10026e844` は金額を計算しない。`end.timeIntervalSince(start) <= 0` なら 0、そうでなければ `frinta(asOf の経過秒 * ShiftInstance.breakMinutes / 全体秒)` を `WorkRecord.breakMinutes` に書く。asOf は `shiftEnd < now` のとき終了、そうでなければ now。start/end は予定のまま。円の式は `0x10011b1d0` の中に `/60` と `/100` の定数があるところまで到達し、そこで止めている。
 
 `selectedBreakMinutes` は上の比較だけ。分数の作り方は含めていない。境界は `tests/BreakSelection.swift`。法定の (360, 45), (480, 60) では 360 分は 0、361 分は 45、480 分は 45、481 分は 60。
 
 ## 未回収のまま残しているもの
 
-- `PayRounding` の unitMinutes / start / end を時刻へ適用する式
-- 時給・日給・時間帯・割増から金額を出す式
+- 時給・日給・時間帯・割増から金額を出す式。入口と `/60`・`/100` の定数までは `0x10011b1d0`。積の相手は閉じていない
+- 勤務中の start/end を now で切るか。確認できたのは休憩の按分だけ
 - 年収の壁の閾値判定。画面文字列と `IncomeWall` のフィールドはある。比較関数は特定していない
 - 週送りの「オフセットを ±1 するボタン」自体。日数への変換は `0x10020499c` で回収済み
-- 休憩に渡す分数を、二つの呼び出し（秒/60 の切り捨てと、差の 1440 正規化）のどちらで給与が作るか
+- 30 秒と 1 秒の `PeriodicTimelineSchedule` のどちらが勤務中の表示を更新するか
+- 休憩に渡す分数を、編集画面の 1440 正規化と、日付差の切り捨てのどちらで給与が作るか。勤務中の経路が按分するのは `ShiftInstance.breakMinutes` であり、その分数の作り方ではない
 
 画面文言（「6時間を超えたら45分」など）は上記の初期値と矛盾しないが、それ自体は計算の回収ではない。
 

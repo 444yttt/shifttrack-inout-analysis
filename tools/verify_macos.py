@@ -7,6 +7,7 @@ Does not launch the device binary in Simulator. Does not print redacted secrets.
 from __future__ import annotations
 
 import hashlib
+import math
 import re
 import shutil
 import struct
@@ -150,6 +151,7 @@ def main() -> int:
     pool = struct.unpack_from("<4q", data, 0x42D680)
     check(pool == (1320, 300, 480, 25), f"premium constant pool {pool}")
     check_week_shift(data)
+    check_live_pay(data)
 
     check(re.search(rb"ca-app-pub-[0-9]{16}/[0-9]{10}", data) is None, "no ad unit id")
     check(
@@ -290,6 +292,98 @@ def editor_minute_count(start: int, end: int) -> int:
     return 1440 if remainder == 0 else remainder
 
 
+def frinta(value: float) -> float:
+    if value >= 0:
+        return float(math.floor(value + 0.5))
+    return float(math.ceil(value - 0.5))
+
+
+def round_seconds(seconds: float, unit_minutes: int, direction: str) -> float:
+    if unit_minutes < 2 or direction == "exact":
+        return seconds
+    unit = float(unit_minutes * 60)
+    units = seconds / unit
+    if direction == "up":
+        rounded = math.ceil(units)
+    elif direction == "down":
+        rounded = math.floor(units)
+    else:
+        rounded = frinta(units)
+    return rounded * unit
+
+
+def scaled_break(elapsed: float, duration: float, break_minutes: int) -> int:
+    if duration <= 0:
+        return 0
+    return int(frinta(elapsed * break_minutes / duration))
+
+
+def check_live_pay(data: bytes) -> None:
+    for off, word in (
+        (0x26EB24, 0x9406387E),
+        (0x26EB28, 0x1E602008),
+        (0x26EB3C, 0x5E61D809),
+        (0x26EB4C, 0x1E690800),
+        (0x26EB50, 0x1E681800),
+        (0x26EB54, 0x1E664000),
+        (0x26EB90, 0x9E780014),
+        (0x26EB98, 0xD2800014),
+        (0x26EBF4, 0xF8286B14),
+        (0x11B4A4, 0xF1000ABF),
+        (0x11B4B0, 0x3400049B),
+        (0x11B4E4, 0x9E630108),
+        (0x11B4F8, 0x1E64C001),
+        (0x11B500, 0x1E654002),
+        (0x11B504, 0x1E664000),
+        (0x11B508, 0x1E600C40),
+        (0x11B50C, 0x7100077F),
+        (0x11B510, 0x1E600C20),
+        (0x11B514, 0x1E680800),
+        (0x11B860, 0xD2E809C8),
+        (0x11B960, 0xD2E80B28),
+        (0x25782C, 0x1E67D000),
+        (0x258254, 0x1E67D000),
+        (0x262B48, 0x1E6E1000),
+    ):
+        got = struct.unpack_from("<I", data, off)[0]
+        check(got == word, f"live/rounding word at {off:#x}")
+    since = branch_target(struct.unpack_from("<I", data, 0x26EB24)[0], 0x10026EB24)
+    check(since == 0x1003FCD1C, f"live timeIntervalSince at {since:#x}")
+    record = branch_target(struct.unpack_from("<I", data, 0x26E9D8)[0], 0x10026E9D8)
+    check(record == 0x1000EDD2C, f"live WorkRecord accessor at {record:#x}")
+    for off, pc in ((0x25783C, 0x10025783C), (0x258260, 0x100258260), (0x262B58, 0x100262B58)):
+        got = branch_target(struct.unpack_from("<I", data, off)[0], pc)
+        check(got == 0x1003FDBD4, f"timeline schedule init at {got:#x}")
+    cases = (
+        (450.0, 0, "up", 450.0),
+        (450.0, 1, "nearest", 450.0),
+        (450.0, 15, "exact", 450.0),
+        (450.0, 15, "nearest", 900.0),
+        (449.0, 15, "nearest", 0.0),
+        (1.0, 15, "up", 900.0),
+        (899.0, 15, "down", 0.0),
+        (-450.0, 15, "nearest", -900.0),
+        (-1.0, 15, "up", 0.0),
+        (-1.0, 15, "down", -900.0),
+    )
+    for seconds, unit, direction, expect in cases:
+        got = round_seconds(seconds, unit, direction)
+        check(got == expect, f"round {seconds} unit {unit} {direction} -> {got}")
+    for elapsed, duration, minutes, expect in (
+        (4 * 3600.0, 8 * 3600.0, 60, 30),
+        (0.0, 8 * 3600.0, 60, 0),
+        (8 * 3600.0, 8 * 3600.0, 60, 60),
+        (30.0, 8 * 3600.0, 60, 0),
+        (240.0, 8 * 3600.0, 60, 1),
+        (-14400.0, 8 * 3600.0, 60, -30),
+        (-3600.0, 8 * 3600.0, 60, -8),
+        (1.0, 0.0, 60, 0),
+        (1.0, -1.0, 60, 0),
+    ):
+        got = scaled_break(elapsed, duration, minutes)
+        check(got == expect, f"scaled break {elapsed}/{duration} -> {got}")
+
+
 def macos_tools() -> None:
     if not Path("/usr/bin/sw_vers").exists():
         print("macOS tools skipped (not macOS)")
@@ -337,7 +431,14 @@ def macos_tools() -> None:
         print("dyld_info not on PATH; format 6 was checked from the Mach-O header")
     swift = shutil.which("swift")
     if swift:
-        for name in ("WeekShift.swift", "BreakSelection.swift", "MinuteInputs.swift", "DateDirection.swift"):
+        for name in (
+            "WeekShift.swift",
+            "BreakSelection.swift",
+            "MinuteInputs.swift",
+            "DateDirection.swift",
+            "PayRounding.swift",
+            "LiveScale.swift",
+        ):
             proc = subprocess.run([swift, str(ROOT / "tests" / name)], text=True, capture_output=True)
             print((proc.stdout or "") + (proc.stderr or ""))
             check(proc.returncode == 0, f"swift tests/{name}")

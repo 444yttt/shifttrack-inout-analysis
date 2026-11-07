@@ -8,8 +8,9 @@ import Foundation
 /// Week shifting is the checked multiply at 0x10020499c.
 /// Break selection is the comparison at 0x1000e967c. It takes minutes already
 /// computed; it does not define how those minutes are produced.
-/// Payroll arithmetic and minute rounding were not recovered as functions.
-/// Do not fill those in from the UI strings.
+/// PayRounding's application and the on-shift break scale are reconstructed
+/// below from instructions. The yen expression inside 0x10011b1d0 is not.
+/// Do not fill that in from the UI strings.
 /// No advertisements.
 
 struct RecoveredBreakRule {
@@ -187,5 +188,106 @@ enum InOutRecovered {
     /// and not a wage formula.
     static func minutesFromEndDate(since start: Date, end: Date) -> Int {
         truncatedMinutes(towardZero: end.timeIntervalSince(start))
+    }
+}
+
+/// `RoundingDirection` case order is exact, up, down, nearest.
+/// Raw values 0, 1, 2 match the compares in 0x10011b1d0. Any other byte,
+/// including nearest, takes `frinta`.
+enum RecoveredRoundingDirection: UInt8 {
+    case exact = 0
+    case up = 1
+    case down = 2
+    case nearest = 3
+}
+
+/// `PayRounding` is `unitMinutes` then the two direction bytes at +8 and +9.
+/// `PayTerms.rounding` is field 6 (metadata +0x28).
+struct RecoveredPayRounding {
+    var unitMinutes: Int
+    var start: RecoveredRoundingDirection
+    var end: RecoveredRoundingDirection
+}
+
+extension InOutRecovered {
+    /// 0x10011b4a4 through 0x10011b520, repeated for the end byte at 0x10011b560.
+    /// `unitMinutes < 2` or direction `exact` (byte 0) copies the original instant.
+    /// Otherwise `unitSeconds = unitMinutes * 60` (the multiply is checked and traps
+    /// on overflow; this reconstruction does not trap). Seconds are
+    /// `date.timeIntervalSince(startOfDay)`. Divide by the unit, then
+    /// up = `frintp`, down = `frintm`, anything else = `frinta`, and add the
+    /// rounded seconds back onto that same start of day.
+    /// This is not a 1440-minute wrap. A negative `timeIntervalSince(startOfDay)`
+    /// was not observed on a device; the floating-point ops still accept one.
+    static func roundedSecondsFromStartOfDay(
+        _ seconds: Double,
+        unitMinutes: Int,
+        direction: RecoveredRoundingDirection
+    ) -> Double {
+        if unitMinutes < 2 || direction == .exact {
+            return seconds
+        }
+        let unit = Double(unitMinutes * 60)
+        let units = seconds / unit
+        let rounded: Double
+        switch direction {
+        case .exact:
+            rounded = units
+        case .up:
+            rounded = units.rounded(.up)
+        case .down:
+            rounded = units.rounded(.down)
+        case .nearest:
+            rounded = units.rounded(.toNearestOrAwayFromZero)
+        }
+        return rounded * unit
+    }
+
+    /// Same passes. The first pass reads `PayRounding.start` (byte +8) and the
+    /// second reads `PayRounding.end` (byte +9). Each date is rounded against
+    /// its own `startOfDay`. Skipping the round returns that date unchanged.
+    static func roundedDate(
+        _ date: Date,
+        unitMinutes: Int,
+        direction: RecoveredRoundingDirection,
+        calendar: Calendar = .current
+    ) -> Date {
+        let start = calendar.startOfDay(for: date)
+        let seconds = roundedSecondsFromStartOfDay(
+            date.timeIntervalSince(start),
+            unitMinutes: unitMinutes,
+            direction: direction
+        )
+        if seconds == date.timeIntervalSince(start) {
+            return date
+        }
+        return start.addingTimeInterval(seconds)
+    }
+
+    /// 0x10026ea84 reads `TimelineView.Context.date`. The compare is
+    /// `shiftEnd < now` (`x0` is the end, `x1` is now). The date copied into
+    /// the second `timeIntervalSince` is `shiftEnd` when that compare is true,
+    /// and `now` otherwise. Equal instants stay on `now`.
+    static func liveAsOf(now: Date, shiftEnd: Date) -> Date {
+        shiftEnd < now ? shiftEnd : now
+    }
+
+    /// 0x10026eb24. `d8` is `end.timeIntervalSince(start)`. `<= 0` stores 0
+    /// (`mov x20, #0`). Otherwise `d9` is `ShiftInstance.breakMinutes`
+    /// (metadata +0x38) as a Double, and the second interval is
+    /// `asOf.timeIntervalSince(start)`.
+    /// `frinta` then `fcvtzs` (toward zero of an already-integral value).
+    /// The integer is stored at `WorkRecord.breakMinutes` (metadata +0x20).
+    /// The record's start and end are still the shift's original dates.
+    /// This is the break fed to payroll. It is not itself a yen amount.
+    /// A negative elapsed value stays negative; that path was not seen on screen.
+    static func scaledBreakMinutes(start: Date, end: Date, asOf: Date, breakMinutes: Int) -> Int {
+        let duration = end.timeIntervalSince(start)
+        if duration <= 0 {
+            return 0
+        }
+        let elapsed = asOf.timeIntervalSince(start)
+        let scaled = (elapsed * Double(breakMinutes) / duration).rounded(.toNearestOrAwayFromZero)
+        return Int(scaled)
     }
 }
