@@ -18,10 +18,10 @@
 
 `customBreaks == 1` のとき `Workplace.breakRules`、そうでなければ法定グローバル `0x1005d0a40`。
 
-## 渡すが給与へ繋がないもの
+## 呼び出しの入力としては確定、給与式としては繋がないもの
 
-- `truncatedMinutes` — すでに得ている秒を 60 で割り 0 方向へ切り捨てる。`0x1001cee68` が選択関数へ渡す直前の変換。どちらの日付が `timeIntervalSince` の受信側かは未確定
+- `minutesFromEndDate` — `0x1001cee68` は同じオブジェクトの `endDate.timeIntervalSince(startDate)` を 60 で割り、0 方向へ切り捨てる。同じ時刻は 0 分。編集画面の「同じ分は 1440」とは別。時給の式ではない
 
 ## 未回収
 
-丸め（`PayRounding` の unitMinutes / start / end の適用）、時給から金額、年収の壁の閾値、週オフセットの ±1。画面文言や Codable からは補っていない。
+丸め（`PayRounding` の unitMinutes / start / end の適用）、時給から金額、年収の壁の閾値、週オフセットの ±1。`PayRounding` の記述子をコードが直接参照する箇所は無く、同じ探索は繰り返していない。画面文言や一般的な割増では補っていない。

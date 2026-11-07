@@ -178,4 +178,14 @@ enum InOutRecovered {
     static func truncatedMinutes(towardZero seconds: Double) -> Int {
         Int(seconds / 60.0)
     }
+
+    /// Same caller, after the ARM64 Swift rule that `self` is `x20`.
+    /// `x20` is the slot filled from `endDate` (`0x100406020`).
+    /// `x0` is the slot filled from `startDate` (`0x100415060`) on the same object.
+    /// The call is `endDate.timeIntervalSince(startDate)`, then truncate toward zero.
+    /// Equal instants are 0 minutes, not 1440. This is not `editorMinuteCount`
+    /// and not a wage formula.
+    static func minutesFromEndDate(since start: Date, end: Date) -> Int {
+        truncatedMinutes(towardZero: end.timeIntervalSince(start))
+    }
 }

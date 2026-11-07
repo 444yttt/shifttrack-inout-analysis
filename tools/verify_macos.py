@@ -261,6 +261,25 @@ def check_break_selection(data: bytes) -> None:
     for seconds, expect in ((3599.9, 59), (3600.0, 60), (60.0, 1), (59.9, 0), (-1.0, 0), (-119.0, -1)):
         got = int(seconds / 60.0)  # toward zero, matching fcvtzs
         check(got == expect, f"trunc {seconds}s -> {got} expected {expect}")
+    # Swift self is x20. endDate is bridged into x20; startDate is passed in x0.
+    for off, word, label in (
+        (0x1CF3A0, 0xAA1503E0, "endDate receiver"),
+        (0x1CF3C0, 0xAA1403E8, "endDate into x20"),
+        (0x1CF3CC, 0xAA1503E0, "startDate receiver"),
+        (0x1CF3EC, 0xAA1B03E8, "startDate into x27"),
+        (0x1CF3F8, 0xAA1B03E0, "startDate argument"),
+    ):
+        got = struct.unpack_from("<I", data, off)[0]
+        check(got == word, label)
+    for off, pc, expect, label in (
+        (0x1CF3A4, 0x1001CF3A4, 0x100406020, "endDate"),
+        (0x1CF3D0, 0x1001CF3D0, 0x100415060, "startDate"),
+        (0x1CF3FC, 0x1001CF3FC, 0x1003FCD1C, "timeIntervalSince"),
+    ):
+        got = branch_target(struct.unpack_from("<I", data, off)[0], pc)
+        check(got == expect, f"{label} at {got:#x}")
+    check(data[0x4CD1CD : 0x4CD1CD + 7] == b"endDate", "endDate selector string")
+    check(data[0x4EAAD6 : 0x4EAAD6 + 9] == b"startDate", "startDate selector string")
 
 
 def editor_minute_count(start: int, end: int) -> int:
@@ -318,7 +337,7 @@ def macos_tools() -> None:
         print("dyld_info not on PATH; format 6 was checked from the Mach-O header")
     swift = shutil.which("swift")
     if swift:
-        for name in ("WeekShift.swift", "BreakSelection.swift", "MinuteInputs.swift"):
+        for name in ("WeekShift.swift", "BreakSelection.swift", "MinuteInputs.swift", "DateDirection.swift"):
             proc = subprocess.run([swift, str(ROOT / "tests" / name)], text=True, capture_output=True)
             print((proc.stdout or "") + (proc.stderr or ""))
             check(proc.returncode == 0, f"swift tests/{name}")
