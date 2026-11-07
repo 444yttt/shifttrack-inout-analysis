@@ -1,6 +1,6 @@
 # 統合担当への引き渡し
 
-公開解析リポジトリの再構成。元の Swift ソースではない。広告はない。製品の私有コードは含まない。時給から金額を出す式はまだ閉じていない。`roundedSecondsFromStartOfDay` と `scaledBreakMinutes` は命令から再構成したが、それを時給の式として繋がない。
+公開解析リポジトリの再構成。元の Swift ソースではない。広告はない。製品の私有コードは含まない。時給の円は `0x10011b1d0` の命令から再構成した。手当・控除の式は閉じていない。日給を足す条件の追加ビットの出所も未確定なので、そこを推測で埋めない。
 
 ## 検証済み commit
 
@@ -49,6 +49,7 @@
 - 分のホイールは 1440 正規化のあと `bySettingHour`（秒 0、nextTime、first、forward）
 - 上記の丸め適用と、勤務中の休憩按分
 - タイムライン更新間隔の定数 30 秒が 2 箇所、1 秒が 1 箇所。どの画面の数字を動かしているかは未接続
+- 時給の円、深夜・残業・休日の割増、日給の base 加算、交通の ExtraPayItem、live の表示が base + premium であること。詳細は下の「円」
 
 名前のみ（画面型）: `InOutTab` の list / calendar / workplaces / income / settings。`WorkplaceListView`、`CalendarTabView`、`CalendarDayView`、`IncomeView`、`WallEditorView`、`SettingsView`、`ShiftCheckView`、`ShiftEntryEditor`、`PayBreakdownView`、`PayTermsEditorView`、`PayScheduleEditorView`、`PayPeriodsView`、`UnconfirmedShiftsView`、`OnboardingView`、`LateMessageView`、`WorkplaceEditorView`、`WorkplaceDirectoryView`、`GuideOverlay`（`GuideTarget` に listPay / incomeEstimate / incomeWall がある）。`RollingYen` は `value: Double` の表示型で、`0x10026e260` がアクセサを呼ぶ。金額の中身はこの型には無い。
 
@@ -56,11 +57,38 @@
 
 `0x100218a18` と `0x100218ea4` は `timeIntervalSinceNow` を -300 秒と比較する。定数であり、`startGraceMinutes` を読んでいることは未確認。
 
+## 円。0x10011b1d0 と呼び出し元
+
+`0x10011b210` は `x0` を WorkRecord として受け取る。`0x10011b208` は `x2` を、それまでの分数を指す Double として保存する。給与関数はレコードの start から end までを 60 秒ずつ進める。`now` を end に書く命令はこの経路に無い。勤務中の `0x10026e844` が差し替えるのは `breakMinutes` だけなので、金額の区間は予定の開始から終了である。
+
+時給（`PayMethod` が daily ではない）:
+
+- BreakSpan が1つでもあると、分数の割合は 1 のまま。中点がその区間に入る分は1分ずつ落とす。`breakMinutes` の按分は使わない
+- BreakSpan が無いとき、割合は `max(0, 全体分 - breakMinutes) / 全体分`。全体分が 0 以下なら 0
+- 円は `支払った分 * 時給 / 60` を `PayResult.base`（+8）へ加算する
+- 時給の整数は、中点の分が `WageBand` の中なら `hourlyWage`。そうでなければ `0x1000de424` の戻り（`Workplace.wageHistory`、ラベルは「時給」）
+- 8時間・休憩60・時給1000・BreakSpan なしなら 7000。勤務中に休憩だけ30へ按分すると 7500 であり、予定金額の半分ではない
+
+深夜。`NightPremium` の start/end。start と end が同じなら窓は空。start < end なら `start <= 分 < end`。そうでなければ日をまたぐ。窓の中で、enabled、バンドの `includesNightPremium` が 0、rate が 0 でないとき、`premium += その分の基本給 * rate / 100`。
+
+残業。`prior + この分` が threshold を超えた分だけ。threshold ちょうどに着く分は 0。既に超えていればその分は全部。`premium += 残業分 * 時給 / 60 * rate / 100`。prior は引数 `x2`。
+
+休日。`DateComponents.weekday - 1` が `ratePercentByWeekday` の範囲なら、`premium += その分の基本給 * rate / 100`。曜日が無い、または範囲外ならここでは足さない。
+
+日給。エンジンは daily のとき上の乗算に入らない。呼び出し元 `0x100119384` が `PayMethod == daily`（バイト 1）かつ別の下位ビットが 1 のとき、`PayTerms.dailyWage` を base に足す。そのビットのフィールド名は特定していない。
+
+支給項目。`PayItem.unit == perPeriod`（バイト 2）はこのループを飛ばす。`ExtraPayItem.kind == transport`（バイト 0）かつ `amount >= 1` の整数を `PayResult.transport`（+0x20）に足す。手当と控除の加算はこの命令ではない。
+
+表示。`0x10026ecf0` が base と premium を読み、`0x10026ed14` で足し、`0x10026efb0` が `ContentTransition.numericText(value:)` に渡す。交通費・手当・控除はこの数字に入らない。`RollingYen` 型はこの和と結んでいない。
+
+Timeline の `by`（30秒が2箇所、1秒が1箇所）は、このクロージャと結べていない。60秒は金額を刻む単位であり、画面の更新周期ではない。
+
 ## 未回収。画面で見る必要があるもの
 
-- 円の式。`0x10011b1d0` に `/60`（`0x10011b860` の 60.0）と `/100`（`0x10011b960` の 100.0）と、Double の加算はある。時給×時間、日給、バンド、割増のどれに乗るかはレジスタを閉じる前に止めた。一般的な給与式で埋めない
-- 勤務中に予定の start/end を now で切っているかは未確認。確認できたのは休憩分数の按分だけ。経過時間×時給とは書かない
-- 休憩中に金額が止まるか、勤務終了の瞬間に何が表示されるかは未観察。終了後の asOf が end になることと、按分が予定休憩に戻ることは命令どおり
+- 日給を足す下位ビットのフィールド名。`PayMethod.daily` と `dailyWage` の加算自体は命令にある
+- `PayItem` の perShift / perDay が金額へどう乗るか。perPeriod を飛ばすことと、交通の `ExtraPayItem` を transport に足すことだけ確認した
+- 手当と控除の加算。live の数字は base + premium で、この2つは入らない
+- 休憩中に金額が止まる見た目。命令上、BreakSpan が無ければ休憩は予定区間から引くだけで、経過時間で区間は切らない。終了後の asOf が end になることと、按分が予定休憩に戻ることは確認済み
 - 日をまたぐ丸め。この経路は各日付の startOfDay からの秒で、1440 分では巻かない。深夜の startOfDay をまたぐ見た目は未観察
 - 年収の壁の閾値比較。週オフセットを ±1 する側
 - 30 秒と 1 秒のどちらが勤務中の金額表示を更新するか

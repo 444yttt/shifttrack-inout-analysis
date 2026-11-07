@@ -8,9 +8,9 @@ import Foundation
 /// Week shifting is the checked multiply at 0x10020499c.
 /// Break selection is the comparison at 0x1000e967c. It takes minutes already
 /// computed; it does not define how those minutes are produced.
-/// PayRounding's application and the on-shift break scale are reconstructed
-/// below from instructions. The yen expression inside 0x10011b1d0 is not.
-/// Do not fill that in from the UI strings.
+/// PayRounding, the on-shift break scale, and the hourly yen expression in
+/// 0x10011b1d0 are reconstructed below. They are not the original source.
+/// Allowance and deduction amounts are not closed. Do not fill those in.
 /// No advertisements.
 
 struct RecoveredBreakRule {
@@ -289,5 +289,132 @@ extension InOutRecovered {
         let elapsed = asOf.timeIntervalSince(start)
         let scaled = (elapsed * Double(breakMinutes) / duration).rounded(.toNearestOrAwayFromZero)
         return Int(scaled)
+    }
+
+    /// 0x10011b848. The seconds are `end.timeIntervalSince(start)` of the
+    /// WorkRecord. If any BreakSpan is present the fraction stays 1 and those
+    /// spans are skipped one minute at a time. Otherwise the fraction is
+    /// `max(0, minutes - breakMinutes) / minutes`, or 0 when minutes <= 0.
+    static func paidMinuteFraction(totalSeconds: Double, breakMinutes: Int, hasBreakSpans: Bool) -> Double {
+        if hasBreakSpans {
+            return 1
+        }
+        let minutes = totalSeconds / 60
+        if minutes <= 0 {
+            return 0
+        }
+        let paid = minutes - Double(breakMinutes)
+        return (paid >= 0 ? paid : 0) / minutes
+    }
+
+    /// 0x10011bf14. `scvtf` of the hourly integer, divide by 60, multiply by
+    /// the slice's paid minutes, add to `PayResult.base` (offset +8).
+    /// The hourly integer is `WageBand.hourlyWage` when the slice midpoint's
+    /// minute-of-day falls in a band, otherwise the `Int` returned by
+    /// 0x1000de424 (wage history, labeled 時給).
+    static func hourlyYen(paidMinutes: Double, hourlyWage: Int) -> Double {
+        paidMinutes * Double(hourlyWage) / 60
+    }
+
+    /// No BreakSpans. The engine walks the record's own start and end, so
+    /// `totalSeconds` is the scheduled interval. A live call changes
+    /// `breakMinutes` and does not replace the end with now.
+    static func scheduledHourlyYen(totalSeconds: Double, breakMinutes: Int, hourlyWage: Int) -> Double {
+        let fraction = paidMinuteFraction(
+            totalSeconds: totalSeconds,
+            breakMinutes: breakMinutes,
+            hasBreakSpans: false
+        )
+        return hourlyYen(paidMinutes: (totalSeconds / 60) * fraction, hourlyWage: hourlyWage)
+    }
+
+    /// 0x10011bd08. `start == end` is not a window. `start < end` is
+    /// `start <= minute < end`. Otherwise the window wraps midnight.
+    static func minuteIsInPremiumWindow(minuteOfDay: Int, start: Int, end: Int) -> Bool {
+        if start == end {
+            return false
+        }
+        if start < end {
+            return minuteOfDay >= start && minuteOfDay < end
+        }
+        return minuteOfDay >= start || minuteOfDay < end
+    }
+
+    /// 0x10011c168. Added to `PayResult.premium` (+0x10) only for a slice
+    /// already inside the night window, when night is enabled, the matching
+    /// band does not set `includesNightPremium`, and the rate is not 0.
+    /// The slice yen is the same value added to base.
+    static func nightPremiumYen(
+        sliceYen: Double,
+        ratePercent: Int,
+        enabled: Bool,
+        inWindow: Bool,
+        bandIncludesNight: Bool
+    ) -> Double {
+        if enabled && inWindow && !bandIncludesNight && ratePercent != 0 {
+            return sliceYen * Double(ratePercent) / 100
+        }
+        return 0
+    }
+
+    /// 0x10011c454. `priorMinutes` is the Double pointed at by argument x2.
+    /// Minutes at or below the threshold contribute 0. A slice that crosses
+    /// the threshold contributes only the part above it. Once prior minutes
+    /// are already past the threshold, the whole slice counts.
+    static func overtimeMinutes(sliceMinutes: Double, priorMinutes: Double, threshold: Double) -> Double {
+        let under = threshold - priorMinutes
+        let capped = under < sliceMinutes ? under : sliceMinutes
+        if capped < 0 {
+            return sliceMinutes
+        }
+        let extra = sliceMinutes - capped
+        return extra > 0 ? extra : 0
+    }
+
+    /// 0x10011c684. `premium += overtimeMinutes * hourly / 60 * rate / 100`.
+    static func overtimePremiumYen(overtimeMinutes: Double, hourlyWage: Int, ratePercent: Int) -> Double {
+        if ratePercent == 0 || overtimeMinutes == 0 {
+            return 0
+        }
+        return overtimeMinutes * Double(hourlyWage) / 60 * Double(ratePercent) / 100
+    }
+
+    /// 0x10011c420 then 0x10011c4b4. Weekday comes from `DateComponents.weekday`.
+    /// The index is that value minus 1. A missing weekday or an index outside
+    /// the array applies no holiday premium here.
+    static func holidayRatePercent(weekday: Int?, rates: [Int]) -> Int? {
+        guard let weekday else { return nil }
+        let index = weekday - 1
+        guard index >= 0, index < rates.count else { return nil }
+        return rates[index]
+    }
+
+    /// 0x10011c4c0. `sliceYen * rate / 100`, added to premium.
+    static func holidayPremiumYen(sliceYen: Double, ratePercent: Int) -> Double {
+        sliceYen * Double(ratePercent) / 100
+    }
+
+    /// 0x10011a3f4. `PayMethod.daily` is byte 1. The integer at
+    /// `PayTerms.dailyWage` (metadata +0x1c) is added to base. An extra low
+    /// bit must also be 1; the field that bit comes from was not identified,
+    /// so the caller passes it in rather than guessing.
+    static func baseAfterDailyWage(base: Double, dailyWage: Int, methodIsDaily: Bool, flagBit: Bool) -> Double {
+        guard methodIsDaily, flagBit else { return base }
+        return base + Double(dailyWage)
+    }
+
+    /// 0x10011acd0. `ExtraPayItem.kind == transport` (byte 0) and
+    /// `amount >= 1` adds that integer to `PayResult.transport` (+0x20).
+    /// Allowance and deduction are not this add.
+    static func transportAfterExtra(transport: Double, amount: Int, kindIsTransport: Bool) -> Double {
+        guard kindIsTransport, amount >= 1 else { return transport }
+        return transport + Double(amount)
+    }
+
+    /// 0x10026ecf0 loads `PayResult.base` and `.premium`, adds them, and
+    /// 0x10026efb0 passes the sum to `ContentTransition.numericText(value:)`.
+    /// Transport, allowance, and deduction are not in this sum.
+    static func liveNumericTotal(base: Double, premium: Double) -> Double {
+        base + premium
     }
 }

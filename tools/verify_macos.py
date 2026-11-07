@@ -152,6 +152,7 @@ def main() -> int:
     check(pool == (1320, 300, 480, 25), f"premium constant pool {pool}")
     check_week_shift(data)
     check_live_pay(data)
+    check_pay_amount(data)
 
     check(re.search(rb"ca-app-pub-[0-9]{16}/[0-9]{10}", data) is None, "no ad unit id")
     check(
@@ -384,6 +385,83 @@ def check_live_pay(data: bytes) -> None:
         check(got == expect, f"scaled break {elapsed}/{duration} -> {got}")
 
 
+def check_pay_amount(data: bytes) -> None:
+    for off, word in (
+        (0x11B210, 0xAA0003FC),
+        (0x11B208, 0xF9005E62),
+        (0x11BF14, 0x9E620380),
+        (0x11BF18, 0x1E68180D),
+        (0x11BF1C, 0x1E6D092C),
+        (0x11BF20, 0x1E6C29EF),
+        (0x11BF28, 0xFD00052F),
+        (0x11B9E0, 0xD2E809C8),
+        (0x11C168, 0x1E6C09C1),
+        (0x11C180, 0xFD000900),
+        (0x11C684, 0x1E6E09A0),
+        (0x11C688, 0x1E60082D),
+        (0x11C69C, 0xFD000900),
+        (0x11BD08, 0xEB08013F),
+        (0x11BD60, 0x540005EB),
+        (0x11A3F4, 0x7100051F),
+        (0x11A420, 0x5E61D808),
+        (0x11A428, 0x1E682800),
+        (0x11A42C, 0xFD000760),
+        (0x11ACEC, 0x9E630108),
+        (0x11ACF8, 0xFD001380),
+        (0x26ECF0, 0x6D40A6A8),
+        (0x26ED14, 0x1E692908),
+    ):
+        got = struct.unpack_from("<I", data, off)[0]
+        check(got == word, f"pay-amount word at {off:#x}")
+    shown = branch_target(struct.unpack_from("<I", data, 0x26F5D8)[0], 0x10026F5D8)
+    check(shown == 0x1003FD73C, f"numericText at {shown:#x}")
+    check(1000 * 60 / 60 == 1000, "one hour")
+    check(scheduled_yen(8 * 3600, 60, 1000) == 7000, "scheduled 8h minus 60")
+    check(scheduled_yen(8 * 3600, 30, 1000) == 7500, "scaled break stays on the full interval")
+    check(scheduled_yen(0, 60, 1000) == 0, "zero scheduled seconds")
+    check(paid_fraction(3600, 90, False) == 0, "break above the length")
+    check(paid_fraction(3600, 60, True) == 1, "spans do not use the flat break")
+    check(in_window(23 * 60, 22 * 60, 5 * 60) and in_window(4 * 60, 22 * 60, 5 * 60), "overnight window")
+    check(not in_window(5 * 60, 22 * 60, 5 * 60) and not in_window(100, 100, 100), "exclusive end and empty window")
+    check(overtime_minutes(20, 470, 480) == 10, "crossing threshold")
+    check(overtime_minutes(1, 479, 480) == 0, "landing on the threshold")
+    check(overtime_minutes(20, 500, 480) == 20, "already past threshold")
+    check(60 * 1000 / 60 * 25 / 100 == 250, "overtime premium")
+    check(1000 + 250 == 1250, "shown total is base plus premium")
+
+
+def paid_fraction(seconds: float, break_minutes: int, has_spans: bool) -> float:
+    if has_spans:
+        return 1
+    minutes = seconds / 60
+    if minutes <= 0:
+        return 0
+    paid = minutes - break_minutes
+    return (paid if paid >= 0 else 0) / minutes
+
+
+def scheduled_yen(seconds: float, break_minutes: int, hourly: int) -> float:
+    fraction = paid_fraction(seconds, break_minutes, False)
+    return (seconds / 60) * fraction * hourly / 60
+
+
+def in_window(minute: int, start: int, end: int) -> bool:
+    if start == end:
+        return False
+    if start < end:
+        return start <= minute < end
+    return minute >= start or minute < end
+
+
+def overtime_minutes(slice_minutes: float, prior: float, threshold: float) -> float:
+    under = threshold - prior
+    capped = under if under < slice_minutes else slice_minutes
+    if capped < 0:
+        return slice_minutes
+    extra = slice_minutes - capped
+    return extra if extra > 0 else 0
+
+
 def macos_tools() -> None:
     if not Path("/usr/bin/sw_vers").exists():
         print("macOS tools skipped (not macOS)")
@@ -438,6 +516,7 @@ def macos_tools() -> None:
             "DateDirection.swift",
             "PayRounding.swift",
             "LiveScale.swift",
+            "PayAmount.swift",
         ):
             proc = subprocess.run([swift, str(ROOT / "tests" / name)], text=True, capture_output=True)
             print((proc.stdout or "") + (proc.stderr or ""))

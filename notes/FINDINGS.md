@@ -145,14 +145,18 @@ Ghidra の疑似コードも `field + 0x14 < 引数` と、より大きい `over
 
 `PayRounding` の記述子を adrp する箇所と、アクセサ `0x10013554c` への BL は、以前の探索のとおり無かった。適用は別の入口から見つかった。`TimelineView.Context.date` を読む `0x10026e844` が `0x10011dc04` → `0x10011d530` → `0x100119384` → `0x10011b1d0` を呼ぶ。`0x10011b1d0` は `PayTerms` の field 6（metadata +0x28、`rounding`）から `unitMinutes` と方向バイト +8/+9 を読む。`unitMinutes < 2` またはバイト 0 なら日付をコピーする。そうでなければ `unitMinutes * 60`（検査付き）で `startOfDay` からの秒を割り、1 なら `frintp`、2 なら `frintm`、それ以外は `frinta` して `addingTimeInterval` で戻す。`RoundingDirection` の並びは exact, up, down, nearest。
 
-同じ `0x10026e844` は金額を計算しない。`end.timeIntervalSince(start) <= 0` なら 0、そうでなければ `frinta(asOf の経過秒 * ShiftInstance.breakMinutes / 全体秒)` を `WorkRecord.breakMinutes` に書く。asOf は `shiftEnd < now` のとき終了、そうでなければ now。start/end は予定のまま。円の式は `0x10011b1d0` の中に `/60` と `/100` の定数があるところまで到達し、そこで止めている。
+同じ `0x10026e844` は金額を計算しない。`end.timeIntervalSince(start) <= 0` なら 0、そうでなければ `frinta(asOf の経過秒 * ShiftInstance.breakMinutes / 全体秒)` を `WorkRecord.breakMinutes` に書く。asOf は `shiftEnd < now` のとき終了、そうでなければ now。start/end は予定のまま。
+
+`0x10011b1d0` はそのレコードを `x0` で受け、start から end を 60 秒ずつ進める。`now` を end に書く命令は無い。BreakSpan が無ければ支払分は `max(0, 全体分 - breakMinutes)` で、円は `支払分 * 時給 / 60` を `PayResult.base` に足す。時給はバンドの中なら `WageBand.hourlyWage`、そうでなければ `0x1000de424` の戻り。深夜窓の中だけ `premium += その分の基本給 * nightRate / 100`。ただしバンドが `includesNightPremium` なら足さない。残業は threshold を超えた分だけ `premium += 残業分 * 時給 / 60 * rate / 100`。休日は `weekday - 1` の率で同じ形。日給はエンジンでは乗算せず、`0x100119384` が `daily` かつ未命名の下位ビットが 1 のとき `dailyWage` を base に足す。表示は `0x10026ecf0` の base + premium を `ContentTransition.numericText` に渡す。
 
 `selectedBreakMinutes` は上の比較だけ。分数の作り方は含めていない。境界は `tests/BreakSelection.swift`。法定の (360, 45), (480, 60) では 360 分は 0、361 分は 45、480 分は 45、481 分は 60。
 
 ## 未回収のまま残しているもの
 
-- 時給・日給・時間帯・割増から金額を出す式。入口と `/60`・`/100` の定数までは `0x10011b1d0`。積の相手は閉じていない
-- 勤務中の start/end を now で切るか。確認できたのは休憩の按分だけ
+- 日給加算の下位ビットのフィールド名
+- `PayItem` の perShift / perDay の金額。交通の `ExtraPayItem` を `PayResult.transport` に足すことと、`perPeriod` を飛ばすことだけ確認した
+- 手当と控除。live の `numericText` は base + premium で、この2つは入らない
+- 勤務中の Timeline `by` が 30 秒か 1 秒か。60 秒は金額ループの刻みであり、画面の更新周期ではない
 - 年収の壁の閾値判定。画面文字列と `IncomeWall` のフィールドはある。比較関数は特定していない
 - 週送りの「オフセットを ±1 するボタン」自体。日数への変換は `0x10020499c` で回収済み
 - 30 秒と 1 秒の `PeriodicTimelineSchedule` のどちらが勤務中の表示を更新するか
