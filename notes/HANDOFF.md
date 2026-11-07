@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | 週数 × 7 日 | `febde5b6f02a26c9d13d8c164c9a100e499aaf9a` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42376695303 |
 | 休憩の選択 | `0e24b5ab91b3` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42377098813 |
-| 編集画面の分数と秒の切り捨て | この変更の commit（push 後の run を FINDINGS に追記する） | `macos-verify` |
+| 編集画面の分数と秒の切り捨て | `19e5229a227f9ca73dcd551006f303393ac75b67` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42377557969 |
 
 ## 統合してよいもの
 
