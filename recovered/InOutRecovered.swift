@@ -5,8 +5,9 @@ import Foundation
 /// calculation was not found.
 ///
 /// Ghidra pseudocode for the same addresses is in `notes/ghidra/`.
-/// Payroll arithmetic, break-rule selection, and minute rounding were not
-/// recovered as functions. Do not fill those in from the UI strings.
+/// Week shifting is the checked multiply at 0x10020499c. Payroll arithmetic,
+/// break-rule selection, and minute rounding were not recovered as functions.
+/// Do not fill those in from the UI strings.
 /// No advertisements.
 
 struct RecoveredBreakRule {
@@ -116,5 +117,22 @@ enum InOutRecovered {
         let ahead = calendar.date(byAdding: .day, value: 14, to: day, wrappingComponents: false)
         let previous = calendar.date(byAdding: .day, value: -1, to: day, wrappingComponents: false)
         return (ahead, previous)
+    }
+
+    /// 0x10020499c. `x0` is kept in `x25` and multiplied by 7
+    /// (`lsl #3`, `sub`, `smulh` by 7). Overflow goes to `brk #1` at 0x100204ecc.
+    /// The component loaded at 0x100204b40 is `Calendar.Component.day` (bind 0x10056bbb8),
+    /// not `weekOfYear` (0x10056bbb0). The call at 0x100204bf0 passes that product
+    /// as the value, with wrappingComponents false. The base date is the Date in a
+    /// SwiftUI `State` (`wrappedValue` is read immediately before the call).
+    static func addingWeeks(_ weeks: Int, to stateDate: Date, calendar: Calendar = .current) -> Date? {
+        calendar.date(byAdding: .day, value: weeks * 7, to: stateDate, wrappingComponents: false)
+    }
+
+    /// 0x100204c68: `cmp` the saved week count with 0, `mov w8, #3`, `csinc w8, w8, wzr, gt`.
+    /// Positive weeks store 3. Zero and negative store 1. The byte is then passed to a
+    /// `LazyState` setter. These tags are not named in the function.
+    static func weekSlideTag(weeks: Int) -> Int {
+        weeks > 0 ? 3 : 1
     }
 }

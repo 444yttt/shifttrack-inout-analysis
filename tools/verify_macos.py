@@ -61,7 +61,7 @@ def load_commands(data: bytes):
 
 
 def branch_target(word: int, pc: int) -> int | None:
-    if (word >> 26) != 0b000101:
+    if (word >> 26) not in (0b000101, 0b100101):
         return None
     imm = word & 0x3FFFFFF
     if imm & 0x2000000:
@@ -149,6 +149,7 @@ def main() -> int:
     check(imms == [0x168, 0x2D, 0x1E0, 0x3C], f"legal break movz immediates {imms}")
     pool = struct.unpack_from("<4q", data, 0x42D680)
     check(pool == (1320, 300, 480, 25), f"premium constant pool {pool}")
+    check_week_shift(data)
 
     check(re.search(rb"ca-app-pub-[0-9]{16}/[0-9]{10}", data) is None, "no ad unit id")
     check(
@@ -165,6 +166,38 @@ def main() -> int:
         return 1
     print("all checks passed")
     return 0
+
+
+WEEK_WORDS = {
+    0x2049C0: 0xAA0003F9,  # mov x25, x0
+    0x204B40: 0xF945DD08,  # ldr x8, [x8, #0xbb8]  Component.day
+    0x204B68: 0xD37DF328,  # lsl x8, x25, #3
+    0x204B6C: 0xCB190118,  # sub x24, x8, x25
+    0x204B70: 0x528000E8,  # mov w8, #7
+    0x204B74: 0x9B487F28,  # smulh x8, x25, x8
+    0x204BE4: 0xAA1803E1,  # mov x1, x24
+    0x204BEC: 0x52800003,  # mov w3, #0
+    0x204BF0: 0x9407E0B1,  # bl date(byAdding:)
+    0x204C68: 0xF100011F,  # cmp x8, #0
+    0x204C6C: 0x52800068,  # mov w8, #3
+    0x204C70: 0x1A9FC508,  # csinc w8, w8, wzr, gt
+    0x204ECC: 0xD4200020,  # brk #1
+}
+
+
+def week_slide_tag(weeks: int) -> int:
+    return 3 if weeks > 0 else 1
+
+
+def check_week_shift(data: bytes) -> None:
+    for off, word in WEEK_WORDS.items():
+        got = struct.unpack_from("<I", data, off)[0]
+        check(got == word, f"week-shift word at {off:#x}")
+    bl = struct.unpack_from("<I", data, 0x204BF0)[0]
+    target = branch_target(bl, 0x100204BF0)
+    check(target == 0x1003FCEB4, f"week-shift calls date(byAdding:) at {target:#x}")
+    for weeks, days, tag in ((0, 0, 1), (1, 7, 3), (-1, -7, 1), (2, 14, 3), (-3, -21, 1)):
+        check(weeks * 7 == days and week_slide_tag(weeks) == tag, f"week {weeks} -> {days} days tag {tag}")
 
 
 def macos_tools() -> None:
@@ -201,8 +234,22 @@ def macos_tools() -> None:
         text = (proc.stdout or "") + (proc.stderr or "")
         print("\n".join(text.splitlines()[:40]))
         check("pointer_format" in text or proc.returncode == 0, "dyld_info -fixup_chains ran")
+        binds = subprocess.run([dyld, "-fixups", str(BIN)], text=True, capture_output=True)
+        day_lines = [
+            line
+            for line in (binds.stdout or "").splitlines()
+            if "56bbb8" in line.lower() or "56BBB8" in line or "ComponentO3day" in line
+        ]
+        print("Component.day bind lines", len(day_lines))
+        print("\n".join(day_lines[:8]))
+        check(any("3day" in line or "ComponentO3day" in line for line in day_lines), "dyld_info names Component.day at 0x10056bbb8")
     else:
         print("dyld_info not on PATH; format 6 was checked from the Mach-O header")
+    swift = shutil.which("swift")
+    if swift:
+        proc = subprocess.run([swift, str(ROOT / "tests" / "WeekShift.swift")], text=True, capture_output=True)
+        print((proc.stdout or "") + (proc.stderr or ""))
+        check(proc.returncode == 0, "swift tests/WeekShift.swift")
 
 
 if __name__ == "__main__":

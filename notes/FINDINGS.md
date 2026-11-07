@@ -88,11 +88,26 @@ sha256 `11b0cf24cb5beabcc440ab1b54ba8886aee25b9e6caf686009397289d8b3b4a5`、サ�
 
 ### 日付の移動 — 一部回収
 
-`Calendar.date(byAdding:value:to:wrappingComponents:)` の value と component が疑似コード上で読めたもの。wrappingComponents は 0（false）。`weekOfYear` の import はスタブに無い。`__weekOffset` は型のフィールド名としてはあるが、±7 日を足す関数は見つけていない。
+`Calendar.date(byAdding:value:to:wrappingComponents:)` の value と component が疑似コード上で読めたもの。wrappingComponents は 0（false）。`weekOfYear` のケースシンボルは got `0x10056bbb0` にあるが、下の週送り関数はそれを読まない。`__weekOffset` というフィールド名はある。オフセットを ±1 する呼び出し元の式は、唯一の caller `0x100210b7c` が引数 `x0` をそのまま渡すだけで、増減そのものは未回収。
 
 - `0x1001b4a94`: `startOfDay(for:)` のあと `Component.day` で -1 と +2
 - `0x1000837d8`: `Component.day` で +14 と -1
 - `0x10006028c`: `dateInterval(of: .month, for:)` と、`Component.day` の -1 および +1
+
+## 週送り — 日数への変換は回収済み
+
+`0x10020499c`（1356 bytes）。唯一の直接呼び出しは `0x100210b7c` で、受け取った `x0` を変えずに渡す。
+
+命令:
+
+- `0x1002049c0` `mov x25, x0`。週数は第1引数
+- `0x100204b40` が got `0x10056bbb8` を読む。これは `Calendar.Component.day`。隣の `0x10056bbb0` は `weekOfYear` だが、この関数は読まない
+- `0x100204b68` から `lsl x8, x25, #3` / `sub x24, x8, x25` / `mov w8, #7` / `smulh`。`x24 = x25 * 7`。上位半分が符号と合わなければ `0x100204ecc` の `brk #1`
+- `0x100204be4` でその積を `x1` に置き、`w3 = 0` で `0x100204bf0` から `Calendar.date(byAdding:value:to:wrappingComponents:)` を呼ぶ
+- 呼ぶ直前の疑似コードは SwiftUI `State.wrappedValue` を `to:` に渡している。`startOfDay` はこの関数の中では呼ばない
+- 加算に成功したあと `0x100204c68` は保存してある週数を 0 と比較し、`mov w8, #3` / `csinc ..., gt`。週数が正なら 1 byte のタグは 3、0 以下なら 1。そのバイトは `LazyState` の setter に渡る。タグの型名はこの関数内に無い
+
+再構成は `InOutRecovered.addingWeeks` と `weekSlideTag`。`tests/WeekShift.swift` はタグと、Foundation の「7日加える」が同じ日付になることを見る。オーバーフローでトラップする点は Swift の `*` と同じで、境界値の実行はしていない。
 
 ## 未回収のまま残しているもの
 
@@ -100,7 +115,7 @@ sha256 `11b0cf24cb5beabcc440ab1b54ba8886aee25b9e6caf686009397289d8b3b4a5`、サ�
 - `PayRounding` の unitMinutes / start / end を時刻へ適用する式
 - 時給・日給・時間帯・割増から金額を出す式
 - 年収の壁の閾値判定。画面文字列と `IncomeWall` のフィールドはある。比較関数は特定していない
-- 週のページングを `weekOfYear` または ±7 日として実装した関数
+- 週送りの「オフセットを ±1 するボタン」自体。日数への変換は `0x10020499c` で回収済み（下の節）
 
 画面文言（「6時間を超えたら45分」など）は上記の初期値と矛盾しないが、それ自体は計算の回収ではない。
 
