@@ -5,8 +5,10 @@ import Foundation
 /// calculation was not found.
 ///
 /// Ghidra pseudocode for the same addresses is in `notes/ghidra/`.
-/// Week shifting is the checked multiply at 0x10020499c. Payroll arithmetic,
-/// break-rule selection, and minute rounding were not recovered as functions.
+/// Week shifting is the checked multiply at 0x10020499c.
+/// Break selection is the comparison at 0x1000e967c. It takes minutes already
+/// computed; it does not define how those minutes are produced.
+/// Payroll arithmetic and minute rounding were not recovered as functions.
 /// Do not fill those in from the UI strings.
 /// No advertisements.
 
@@ -134,5 +136,23 @@ enum InOutRecovered {
     /// `LazyState` setter. These tags are not named in the function.
     static func weekSlideTag(weeks: Int) -> Int {
         weeks > 0 ? 3 : 1
+    }
+
+    /// 0x1000e967c. Not original source.
+    /// Keeps rules whose `overMinutes` is strictly less than `minutes`
+    /// (`cmp` / `b.lt` at 0x1000e9770). Among those, keeps the greatest
+    /// `overMinutes`; an equal value does not replace the earlier rule
+    /// (`cmp` / `b.ge` at 0x1000e9904). Returns that rule's `breakMinutes`
+    /// (metadata field +0x18). No match, or an empty list, returns 0.
+    /// This does not compute `minutes`. Callers prepare it differently.
+    static func selectedBreakMinutes(_ minutes: Int, rules: [RecoveredBreakRule]) -> Int {
+        var best: RecoveredBreakRule?
+        for rule in rules where rule.overMinutes < minutes {
+            if let current = best, current.overMinutes >= rule.overMinutes {
+                continue
+            }
+            best = rule
+        }
+        return best?.breakMinutes ?? 0
     }
 }

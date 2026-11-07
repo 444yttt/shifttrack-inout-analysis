@@ -198,6 +198,57 @@ def check_week_shift(data: bytes) -> None:
     check(target == 0x1003FCEB4, f"week-shift calls date(byAdding:) at {target:#x}")
     for weeks, days, tag in ((0, 0, 1), (1, 7, 3), (-1, -7, 1), (2, 14, 3), (-3, -21, 1)):
         check(weeks * 7 == days and week_slide_tag(weeks) == tag, f"week {weeks} -> {days} days tag {tag}")
+    check_break_selection(data)
+
+
+BREAK_WORDS = {
+    0xE9770: 0xEB0B013F,  # cmp x9, x11
+    0xE9774: 0x540000AB,  # b.lt keep
+    0xE9904: 0xEB08013F,  # cmp x9, x8
+    0xE9908: 0x54FFFF2A,  # b.ge keep earlier
+    0xE9898: 0xB9801A68,  # ldrsw x8, [x19, #0x18]
+    0xE98B4: 0xD2800013,  # mov x19, #0
+    0x1CF41C: 0xD2E809C8,  # mov x8, #0x404e000000000000
+    0x1CF424: 0x1E601908,  # fdiv d8, d8, d0
+    0x1CF700: 0x9E780113,  # fcvtzs x19, d8
+    0x1CF714: 0x7100051F,  # cmp w8, #1
+    0x1CF764: 0x97FC67C6,  # bl break selector
+}
+
+
+def selected_break_minutes(minutes: int, rules: list[tuple[int, int]]) -> int:
+    best = None
+    for over, brk in rules:
+        if over < minutes and (best is None or best[0] < over):
+            best = (over, brk)
+    return 0 if best is None else best[1]
+
+
+def check_break_selection(data: bytes) -> None:
+    for off, word in BREAK_WORDS.items():
+        got = struct.unpack_from("<I", data, off)[0]
+        check(got == word, f"break-select word at {off:#x}")
+    bl = struct.unpack_from("<I", data, 0x1CF764)[0]
+    target = branch_target(bl, 0x1001CF764)
+    check(target == 0x1000E967C, f"duration caller reaches selector at {target:#x}")
+    sixty = struct.unpack("<d", struct.pack("<Q", 0x404E000000000000))[0]
+    check(sixty == 60.0, "caller divides the time interval by 60")
+    legal = [(360, 45), (480, 60)]
+    cases = [
+        (360, legal, 0),
+        (361, legal, 45),
+        (480, legal, 45),
+        (481, legal, 60),
+        (0, legal, 0),
+        (-1, legal, 0),
+        (100, [(0, 15), (360, 45)], 15),
+        (400, [(100, 10), (360, 45), (480, 60)], 45),
+        (101, [(100, 10), (100, 99)], 10),
+        (50, [], 0),
+    ]
+    for minutes, rules, expect in cases:
+        got = selected_break_minutes(minutes, rules)
+        check(got == expect, f"break {minutes} {rules} -> {got} expected {expect}")
 
 
 def macos_tools() -> None:
@@ -247,9 +298,10 @@ def macos_tools() -> None:
         print("dyld_info not on PATH; format 6 was checked from the Mach-O header")
     swift = shutil.which("swift")
     if swift:
-        proc = subprocess.run([swift, str(ROOT / "tests" / "WeekShift.swift")], text=True, capture_output=True)
-        print((proc.stdout or "") + (proc.stderr or ""))
-        check(proc.returncode == 0, "swift tests/WeekShift.swift")
+        for name in ("WeekShift.swift", "BreakSelection.swift"):
+            proc = subprocess.run([swift, str(ROOT / "tests" / name)], text=True, capture_output=True)
+            print((proc.stdout or "") + (proc.stderr or ""))
+            check(proc.returncode == 0, f"swift tests/{name}")
 
 
 if __name__ == "__main__":

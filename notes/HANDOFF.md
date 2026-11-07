@@ -10,4 +10,4 @@
 - `bin/IN-OUT` — 署名と広告 ID・メールを除いた実行ファイル
 - `symbols/swiftui-view.txt` — View body の thunk
 
-週の日数変換は `InOutRecovered.addingWeeks`（`0x10020499c`、`Component.day` を週数×7）。オフセットを ±1 する側、休憩規則の選択、丸め式、時給から金額への式、年収の壁の閾値比較は未回収。推測で埋めない。
+週の日数変換は `InOutRecovered.addingWeeks`（`0x10020499c`）。休憩の選択は `selectedBreakMinutes`（`0x1000e967c`、`overMinutes < 分数` のうち最大、同値は先勝ち、無ければ 0）。分数の作り方は呼び出しが二つあり、給与用にはまだ一本化していない。丸め式、時給から金額への式、年収の壁の閾値、週オフセットの ±1 は未回収。推測で埋めない。
