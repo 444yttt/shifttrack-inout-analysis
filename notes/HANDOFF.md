@@ -10,6 +10,7 @@
 | 休憩の選択 | `0e24b5ab91b3` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42377098813 |
 | 編集画面の分数と秒の切り捨て | `19e5229a227f9ca73dcd551006f303393ac75b67` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42377557969 |
 | 丸めの適用と勤務中の休憩按分 | `cd54b571b0ae9bd95dcaf1b35f8e1862a61bfd69` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42379613656 |
+| 時給の円と live の表示 | `fefc70d841ab498dedf96f964700bfa187c8770e` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42380430047 |
 
 ## 統合してよいもの
 
