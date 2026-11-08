@@ -486,6 +486,12 @@ def check_pay_conditions(data: bytes) -> None:
     ):
         got = branch_target(struct.unpack_from("<I", data, off)[0], pc)
         check(got == expect, f"{label} at {got:#x}")
+    check(data[0x502250:0x502250 + len("終わりまで あと ".encode())] == "終わりまで あと ".encode(), "string beside the yen numeric text")
+    check(data[0x502270:0x502270 + len("いま稼いだお給料".encode())] == "いま稼いだお給料".encode(), "accessibility literal")
+    check(data[0x4FB480:0x4FB480 + len("シフトを追加".encode())] == "シフトを追加".encode(), "add-shift literal")
+    for off, word in ((0x26F194, 0x9109C108), (0x26F198, 0xD1008108), (0x26F67C, 0x5290DCA0), (0x26F680, 0x72A010C0)):
+        got = struct.unpack_from("<I", data, off)[0]
+        check(got == word, f"display word at {off:#x}")
 
 
 def macos_tools() -> None:

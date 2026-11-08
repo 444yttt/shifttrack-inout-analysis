@@ -413,7 +413,10 @@ extension InOutRecovered {
 
     /// 0x10026ecf0 loads `PayResult.base` and `.premium`, adds them, and
     /// 0x10026efb0 passes the sum to `ContentTransition.numericText(value:)`.
-    /// Transport, allowance, and deduction are not in this sum.
+    /// That same function also builds the literal "終わりまで あと " and the
+    /// character "円". "いま稼いだお給料" is an accessibility literal in
+    /// 0x10026b214, a different function. Transport, allowance, and deduction
+    /// are not in this sum. The sum is not a value read from a screenshot.
     static func liveNumericTotal(base: Double, premium: Double) -> Double {
         base + premium
     }

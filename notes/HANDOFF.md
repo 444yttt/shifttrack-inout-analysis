@@ -87,7 +87,11 @@
 
 支給項目。`0x100119384` では `unit == perPeriod`（2）を飛ばす。`kind` が transport（0）以外もこの加算に来ない。`condition == nightWork`（1）のときは `ShiftPay.nightMinutes > 0` が必要。`amount >= 1` を一度だけ `PayResult.transport` に足す。perShift も perDay も、通過すれば同じ整数加算である。perDay の前には UUID と比較回数の検査があり、その規則は閉じていない。「日数倍」ではない。手当（kind 1）と控除（kind 2）を allowance / deduction に足す命令は、この呼び出し元と `0x10011b1d0` には無かった。
 
-表示。`0x10026ecf0` が base と premium を読み、`0x10026ed14` で足し、`0x10026efb0` が `ContentTransition.numericText(value:)` に渡す。交通費・手当・控除はこの数字に入らない。`RollingYen` 型はこの和と結んでいない。
+表示。`0x10026ecf0` が base と premium を読み、`0x10026ed14` で足す。受け取る `0x10026efb0` は、その和を `ContentTransition.numericText(value:)` に渡し、同じ関数で「終わりまで あと 」（`0x100502250`）と「円」（`0x10026f67c` の `e5 86 86`）も作る。文字の大きさは 13。これは構築順であり、画面上の配置を見た結果ではない。交通費・手当・控除はこの和に入らない。
+
+「いま稼いだお給料」（`0x100502270`）は別関数 `0x10026b214` の accessibility 文言である。金額の `numericText` ではない。「シフトを追加」（`0x1004fb480`）は一覧ビルダー `0x1002616f4` のボタン文言。`0x100267318` は開始前なら「はじまりまで あと 」、そうでなければ「終わりまで あと 」を、残り時間の文字列に付ける。
+
+ゲート日付はまだ `now` とは言えない。`0x100260e08` は給与側と同じ key path `0x10043a5d8` / `0x10043a600` の `Published` を読み、`ShiftInstance.end > 渡された日付` の要素を残す。その値が通る `0x1001c88b0` は `Calendar.Component.day` を読んだあと `date(byAdding:value:to:wrappingComponents:)` を value 1、wrapping false で呼ぶ。戻りが「今」かは閉じていない。
 
 Timeline の `by`（30秒が2箇所、1秒が1箇所）は、このクロージャと結べていない。60秒は金額を刻む単位であり、画面の更新周期ではない。
 
