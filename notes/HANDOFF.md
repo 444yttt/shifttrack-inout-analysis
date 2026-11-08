@@ -12,6 +12,7 @@
 | 丸めの適用と勤務中の休憩按分 | `cd54b571b0ae9bd95dcaf1b35f8e1862a61bfd69` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42379613656 |
 | 時給の円と live の表示 | `fefc70d841ab498dedf96f964700bfa187c8770e` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42380430047 |
 | 一覧タイムライン、時給履歴、交通費 | `693072de9500e5d6267e4ddef6ded46b9dc31697` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42381152178 |
+| 金額表示の文言 | `02b0f271a08ef15859d1cfc960676d37c1f36ae1` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42443537367 |
 
 ## 統合してよいもの
 
