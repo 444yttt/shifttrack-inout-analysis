@@ -472,6 +472,16 @@ cstring としてあるのは次だけ。
 - spring は response / damping / blend 0 で 4 組。0.28/0.88、0.24/0.85、0.55/0.68、0.45/0.50。再生する画面は未確定
 - 通知クラスとセレクタの cstring はある。呼び出しと分数は未確定
 
+## opaque 型の復元
+
+`__swift5_typeref` に `TupleView`、`ModifiedContent`、`_ConditionalContent` の特殊化名は無い。`__swift5_types` に opaque type は無い。`swift_getOpaqueTypeMetadata2` の 363 回は、アプリの body ではなく SwiftUI メソッドの `QOMQ` を受け取る。padding、font、foregroundStyle の `QOMQ` は import に無い。積み順は 36 画面とも未のまま。
+
+名前が付いた modifier の順は `notes/screens/opaque.md`。日ビューの関数では `presentationBackground`、`presentationCornerRadius`、`presentationDragIndicator`、`onChange`、`sheet`、`sheet`、`alert`。遅刻画面では `navigationTitle`、`navigationBarTitleDisplayMode`、`onChange`。
+
+`ShiftEntryEditor` は descriptor `0x100440570`、アクセサ `0x1001b8554`、専用関数 `0x1001bdcfc`。`TodoEditor` は descriptor `0x1004408c8`、アクセサ `0x1001f641c`、専用関数 `0x1001f3d30`。`PayBreakdownView` のアクセサ `0x1001165c0` は、`bl` でも `adrp` + `add` でも参照されない。
+
+網羅率は確 64 / 324 = 19.8%。未は 206。
+
 ## 未回収。画面で見る必要があるもの
 
 - 日給の `UUID.==` がどの二つのフィールドか。加算と「日給」ラベルの分岐自体は命令にある

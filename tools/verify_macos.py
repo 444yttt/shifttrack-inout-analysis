@@ -645,6 +645,9 @@ def check_symbols_and_layout(data: bytes) -> None:
     check(struct.unpack_from("<I", data, 0x17BA88)[0] == 0xF2E7FAC8, "root easeOut duration high half")
     check(struct.unpack_from("<d", data, 0x42BC78)[0] == 0.28, "spring response 0.28")
     check(struct.unpack_from("<d", data, 0x42BC80)[0] == 0.88, "spring damping 0.88")
+    shown = branch_target(struct.unpack_from("<I", data, 0x549E8)[0], 0x1000549E8)
+    check(shown == 0x100400094, f"calendar body asks for opaque metadata at {shown:#x}")
+    check(b"ShiftEntryEditor" in data and b"TodoEditor" in data, "editor type names are present")
 
 
 def macos_tools() -> None:
