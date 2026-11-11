@@ -25,7 +25,7 @@ descriptor `0x10043dcc0`、アクセサ `0x10002f47c`。専用関数 `0x10002500
 | 2 | `building.2` |
 | 3 | `yensign` |
 
-部分。`0x100025908` と `0x100025b48` は `withAnimation` を呼ぶ。タブの専用関数の中ではない。
+確定。`0x100025908` と `0x100025b48` は、このアクセサだけを参照して `withAnimation` を呼ぶ。タブの専用関数 `0x100025004` の中ではない。
 
 確定に近いが、対応は未確定。`0x100180b74` は `SettingsView`、`IncomeView`、`WorkplaceDirectoryView`、`CalendarTabView`、`WorkplaceListView` のアクセサをこの順で呼ぶ。比較で 1 つを選んではいない。呼び出し順は構築順であり、タブの並びではない。`w21` の値と、この 5 画面の対応は未確定。
 
@@ -67,5 +67,7 @@ descriptor `0x10043f998`、アクセサ `0x10010423c`。専用関数 `0x10010ea2
 部分。`0x100107ec0` は「勤務先を登録」「いつものシフト」「お給料の決まり」を読む。専用関数ではない。`0x100104588` は `OnboardingView` と `WorkplaceImportView` を呼び、`photosPicker` と `PHPickerFilter.images`、`alert` が 2、`onAppear` が 1、`presentationCornerRadius` の即値 32 がある。ピッカーと角丸がどちらの画面かは未確定。`VNRecognizeTextRequest` の `performRequests` は `0x10024e454` にあり、画面アクセサからは届いていない。
 
 観測。初回の「勤務先を登録」で「写真から読み取る」を押すと、同じ題のダイアログに「撮影する」「写真から選ぶ」「キャンセル」が出る。説明文は、この画面の関数が読む「働いているお店の名前を入れます。住所と電話番号は、道順や遅刻の連絡に使います。」と一致する。電話番号と店名は書かない。
+
+確定。`0x100106478` はこのアクセサだけを参照し、`OpacityTransition` のイニシャライザを呼ぶ。持続時間の即値は、この呼び出しには無い。
 
 未確定。記号、フォント、積み順、オンボーディングのページ順。

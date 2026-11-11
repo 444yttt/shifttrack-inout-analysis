@@ -12,7 +12,9 @@ descriptor `0x100440e64`、アクセサ `0x100255730`。専用関数 `0x10025ca2
 
 部分。`0x100255ab0` は一覧と一緒に `WorkplaceEditorView`、`PayPeriodsView`、`UnconfirmedShiftsView`、`OnboardingView`、`LateMessageView` を呼ぶ。`sheet(isPresented:)` が 3、`sheet(item:)` が 5、`alert` が 1、`ZStack` が `0x100256064` にある。どのシートがどの画面かは未確定。`0x10025ed50`、`0x10026acac`、`0x10026b134` は `withAnimation`。一覧の Doto サイズ 64、36、18 は、専用関数の外の関数 `0x100260714`、`0x100266998`、`0x10026bc9c`、`0x10026e260` にある。
 
-未確定。カードの積み順、余白、角丸、記号の位置、色。`Color(UIColor)` の 5 つの短い関数は画面へ結べていない。
+確定。`Image(systemName:)` の `plus` は `0x10026fae8`、`pencil` は `0x10026905c`、`ellipsis` は `0x100269c24`、`chevron.right` は `0x10026dfc0`。`0x100264c30` は `ShiftTodo.done` が 0 のとき `circle`、0 でないとき 21 バイトの「この日のシフト」を渡す。後者は SF Symbol の名前ではない。これらの関数は、呼び出し元を辿ると一覧のアクセサだけに届く。画面の中の位置は未確定。
+
+未確定。カードの積み順、余白、角丸、色。`Color(UIColor)` の 5 つの短い関数は画面へ結べていない。
 
 ## WorkplaceDirectoryView
 
@@ -46,13 +48,15 @@ descriptor `0x100440cd8`、アクセサ `0x100249690`。専用関数 `0x100243ca
 
 部分。`0x100104588` はオンボーディングとこの画面を呼び、`presentationCornerRadius` に 32 を渡す。どちらの画面の角丸かは未確定。
 
+確定。`reverseGeocodeLocation:completionHandler:` は `0x10009a79c`、`0x10009a9dc`、`0x10009ae84` の 3 箇所。それぞれの関数から呼び出し元を辿ると、`WorkplaceImportView` のアクセサだけに届く。渡している座標のフィールド名は、この 3 箇所では閉じていない。
+
 未確定。積み順、フォント、記号、読み込む項目の対応。
 
 ## LocationPickerView
 
 descriptor `0x100440bb8`、アクセサ `0x10023c87c`。専用関数 `0x100237b98`。
 
-確定。`0x100237320` はこのアクセサだけを呼び、`onTapGesture(count:coordinateSpace:perform:)` がある。`0x100238b4c` もこのアクセサだけを呼ぶ。`x8` が 0 でないとき、`0x1000d8454` へ尾呼び出しする。その先の `0x1000d853c` が `requestWhenInUseAuthorization` を呼ぶ。画面アクセサを持たない `0x100218c0c` も同じ尾呼び出しをする。
+確定。`0x100237320` はこのアクセサだけを呼び、`onTapGesture(count:coordinateSpace:perform:)` がある。`0x100238b4c` もこのアクセサだけを呼ぶ。`x8` が 0 でないとき、`0x1000d8454` へ尾呼び出しする。その先の `0x1000d853c` が `requestWhenInUseAuthorization` を呼ぶ。`0x100218c0c` も同じ尾呼び出しをする。この関数自身は画面アクセサを参照しない。呼び出し元を辿ると `LateMessageView` の `0x1000cbc74` に届く。
 
 部分。`0x100235010` は `WorkplaceEditorView` と一緒に `NavigationLink` でこの画面を出す。`0x100235d74` はエディタだけを呼び、`ScrollViewProxy.scrollTo` がある。地図側のスクロールではない。
 

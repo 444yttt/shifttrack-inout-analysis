@@ -81,9 +81,11 @@
 
 確定。import にあるクラスは `UNUserNotificationCenter`、`UNMutableNotificationContent`、`UNNotificationSound`、`UNNotificationRequest`、`EKEventStore`、`EKEvent`。セレクタの cstring として `requestAuthorizationWithOptions:`、`addNotificationRequest:withCompletionHandler:`、`currentNotificationCenter`、`removePendingNotificationRequests`、`saveEvent:span:commit:error:` がある。
 
-部分。設定の近くの関数が「シフトの前に通知」「リマインダー」「位置情報の許可」を読む。
+確定。設定だけへ届く `0x100191250` と `0x1001945ec` が `requestAuthorizationWithOptions:completionHandler:` を呼び、`w2` は 7 である。設定だけへ届く `0x1000f44d4` が `requestFullAccessToEventsWithCompletion:` を呼ぶ。取り込みだけへ届く 3 箇所が `reverseGeocodeLocation:completionHandler:` を呼ぶ。
 
-未確定。どの関数がセレクタを呼び、何分前に通知を作り、どの画面が許可を求めるか。
+部分。カレンダー全件アクセスのもう一箇所 `0x1001cce6c` は、カレンダー許可とオンボーディングの両方から届く。`requestWhenInUseAuthorization` の `0x1000d853c` は、場所の選択と遅刻の両方から届く。
+
+未確定。`addNotificationRequest:withCompletionHandler:` の 4 箇所と、`removePendingNotificationRequestsWithIdentifiers:` の 2 箇所は、画面アクセサまで届かない。何分前に通知を作るかも、これらの呼び出しには無い。
 
 ## アニメーションの即値で、画面が未確定のもの
 

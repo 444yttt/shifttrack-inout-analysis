@@ -598,3 +598,24 @@ Google マップのリンクは取り込み画面の文字列である。失敗�
 起動だけの `0x1000d732c` は、ビットが立っていれば 0.8 秒を `Duration.seconds` と `ContinuousClock` に渡し、立っていなければ spring 0.55 / 0.68 を 0.15 秒遅らせて `withAnimation` する。シフト編集のドラッグは日ビューと共有の `0x10003cdd8` にある。カレンダー許可の `OpacityTransition` はルート、ガイド、起動と共有の `0x10017ac70` にある。
 
 シフト希望だけの `0x100215f10` は「月」を作り、一覧を 0 と 1 の 2 回取る。勤務先編集だけの `0x100236114` は空の名前、重複する適用開始日、0 円未満の時給を読む。場所の選択だけの `0x100238b4c` は、`x8` が 0 でないとき `requestWhenInUseAuthorization` のタスクへ進む。同じタスクは画面を持たない関数からも呼ばれる。
+
+## 記号の経路、許可、取り込みの逆ジオコード
+
+`確` は 130。`部` は 45。`観` は 43。`未` は 106。記号の `未` は 20 から 16。ロジックの `未` は 23 から 19。ジェスチャの `未` は 14 のまま。積み順の `確` は 0 のまま。`VStack` の 5 関数は、一つの画面のアクセサまで届かない。
+
+`Image(systemName:)` の関数から、呼び出し元が一つずつしか無い経路で画面アクセサへ届く名前を、その画面の記号にした。画面の中の位置は見ていない。
+
+- 概要は `chevron.right` と `arrow.up.right`
+- 依頼プランナーは `briefcase.fill`。もう一つの呼び出し元はレジスタのまま
+- 時間のストックは `xmark`
+- Todo は `done == 0` の `circle`。`done != 0` の 21 バイトは「この日のシフト」で、記号名ではない
+- 設定は `chevron.right`、`minus`、`plus`、`arrow.up.right`
+- 年収は `chevron.right` と `plus`
+- カレンダーの日は `calendar` か `checklist`、および `circle`
+- カレンダーは `plus`。29 バイトを渡す呼び出しは、UTF-8 の記号名にしていない
+- 確認は `minus.circle`
+- 一覧は `plus`、`pencil`、`ellipsis`、`chevron.right`、`circle`
+
+ルート、タブ、登録、確認は、その画面のアクセサだけを参照する関数が `withAnimation` か `OpacityTransition` を呼ぶ。依頼プランナーの `0x10020499c` と `0x100200fbc` も同じである。`OpacityTransition` の持続時間は、この呼び出しには無い。
+
+設定だけの `0x100191250` と `0x1001945ec` は `requestAuthorizationWithOptions:completionHandler:` を呼び、`w2` は 7 である。設定だけの `0x1000f44d4` は `requestFullAccessToEventsWithCompletion:` を呼ぶ。カレンダー許可とオンボーディングは、別の `0x1001cce6c` を共有する。取り込みだけの 3 箇所は `reverseGeocodeLocation:completionHandler:` を呼ぶ。座標のフィールド名は閉じていない。`requestWhenInUseAuthorization` は、場所の選択と遅刻の両方から届く。通知の追加と削除は、まだ画面へ届かない。
