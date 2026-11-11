@@ -648,6 +648,8 @@ def check_symbols_and_layout(data: bytes) -> None:
     shown = branch_target(struct.unpack_from("<I", data, 0x549E8)[0], 0x1000549E8)
     check(shown == 0x100400094, f"calendar body asks for opaque metadata at {shown:#x}")
     check(b"ShiftEntryEditor" in data and b"TodoEditor" in data, "editor type names are present")
+    for literal in ("今月に戻ります", "年収の壁を追加", "最初の文章に戻す", "chevron.up"):
+        check(literal.encode() in data, f"copy literal {literal}")
 
 
 def macos_tools() -> None:
