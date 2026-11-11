@@ -157,6 +157,7 @@ def main() -> int:
     check_pattern_place(data)
     check_ui_font(data)
     check_asset_catalog(data)
+    check_symbols_and_layout(data)
 
     check(re.search(rb"ca-app-pub-[0-9]{16}/[0-9]{10}", data) is None, "no ad unit id")
     check(
@@ -606,6 +607,40 @@ def check_asset_catalog(data: bytes) -> None:
     check(b"AccentColor" not in data, "AccentColor is not a cstring in the Mach-O")
     check(struct.unpack_from("<I", data, 0x6BE3C)[0] == 0x528D8E00, "plus symbol immediate")
     check(struct.unpack_from("<I", data, 0x25350)[0] == 0xD28C2C69, "calendar symbol immediate")
+
+
+def small_string(low: int, high: int) -> str:
+    count = (high >> 56) & 0xF
+    raw = low.to_bytes(8, "little") + (high & 0x00FFFFFFFFFFFFFF).to_bytes(8, "little")
+    return raw[:count].decode()
+
+
+def check_symbols_and_layout(data: bytes) -> None:
+    check(data[0x4FB0E0:0x4FB0E0 + 17] == b"slider.horizontal", "tab w21==0 is 17 bytes")
+    check(data[0x4FB0E0:0x4FB0E0 + 19] == b"slider.horizontal.3", "cstring continues .3 outside the count")
+    check(struct.unpack_from("<I", data, 0x253C0)[0] == 0xD280022C, "tab count mov is 17")
+    check(struct.unpack_from("<I", data, 0x253C4)[0] == 0xF2FA000C, "tab count flag is the long-string marker")
+    check(struct.unpack_from("<I", data, 0x253D8)[0] == 0x710002BF, "tab compares w21 with 0")
+    question = small_string(0x6E6F697473657571, 0xEC0000006B72616D)
+    exclaim = small_string(0x74616D616C637865, 0xEF6B72616D6E6F69)
+    check(question == "questionmark" and exclaim == "exclamationmark", "alert symbol pair")
+    circle = small_string(0x656C63726963, 0xE600000000000000)
+    check(circle == "circle", "undone todo symbol")
+    check(data[0x4FB4A0:0x4FB4A0 + 21] == "この日のシフト".encode(), "done todo passes the 21-byte prefix")
+    briefcase = small_string(0x7361636665697262, 0xEE006C6C69662E65)
+    check(briefcase == "briefcase.fill", "one caller passes briefcase.fill")
+    check(struct.unpack_from("<I", data, 0x29FD8)[0] == 0xD2E80701, "one VStack spacing is 24")
+    check(struct.unpack_from("<I", data, 0x29FDC)[0] == 0x52800002, "that spacing tag is 0")
+    check(struct.unpack_from("<I", data, 0x23970)[0] == 0x52800022, "HStack spacing tag is 1")
+    check(struct.unpack_from("<I", data, 0x3D590)[0] == 0xD2E80800, "day sheet radius bits are 32")
+    check(struct.unpack_from("<I", data, 0x171F0)[0] == 0x52800788, "overlap scales a threshold by 60")
+    check(struct.unpack_from("<I", data, 0x17234)[0] == 0xD2E809C8, "overlap divides the gap by 60")
+    shown = branch_target(struct.unpack_from("<I", data, 0x253F0)[0], 0x1000253F0)
+    check(shown == 0x1003FE360, f"tab symbol call is systemName at {shown:#x}")
+    shown = branch_target(struct.unpack_from("<I", data, 0x3D5AC)[0], 0x10003D5AC)
+    check(shown == 0x1003FE15C, f"day radius call at {shown:#x}")
+    shown = branch_target(struct.unpack_from("<I", data, 0x1730C)[0], 0x10001730C)
+    check(shown == 0x1003FCD4C, f"overlap date compare at {shown:#x}")
 
 
 def macos_tools() -> None:
