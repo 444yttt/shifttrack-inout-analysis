@@ -15,6 +15,7 @@
 | 金額表示の文言 | `02b0f271a08ef15859d1cfc960676d37c1f36ae1` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42443537367 |
 | パターンを選んだ日へ置く | `1da02529ffd3df525a3f95ebe3a7ff564b401c14` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42977835967 |
 | 画面型と Doto-BlackRound | `d309fae3b9dfa9ea062e13082a1fb4ae88c647e1` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42978746906 |
+| カタログの色と記号名 | `5c9423cdc8475c3ff01eee3fad5106e617f75c35` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42980044157 |
 
 ## 統合してよいもの
 
