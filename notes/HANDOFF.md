@@ -16,6 +16,7 @@
 | パターンを選んだ日へ置く | `1da02529ffd3df525a3f95ebe3a7ff564b401c14` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42977835967 |
 | 画面型と Doto-BlackRound | `d309fae3b9dfa9ea062e13082a1fb4ae88c647e1` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42978746906 |
 | カタログの色と記号名 | `5c9423cdc8475c3ff01eee3fad5106e617f75c35` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42980044157 |
+| タブの記号、残りの systemName、レイアウトの即値 | `90149dd899310aa2f757d402424c420b9737da16` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42981594356 |
 
 ## 統合してよいもの
 
