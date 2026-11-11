@@ -122,3 +122,15 @@ cstring は `0x1005002a0`、18 バイト。
 `ShiftRepeatEditorView` だけを呼ぶ `0x1001fc2a4` の `0x1001fc408` も、カウント 18 で同じ文字列を渡す。繰り返し側でダイアログを出すのは `0x1001fbdc0`。この関数も繰り返し画面だけを呼び、重なりのラッパ `0x100017d04` の戻りの +0x10 が 0 なら `0x1003fe714` を呼ばない。0 でないときだけ呼ぶ。
 
 「やめる」は cstring ではない。
+
+## 未のまま閉じた走査
+
+残っていた未を、その画面のアクセサだけを呼ぶ関数の全体で探した。`Image(systemName:)`、`Label` の `systemImage`、`Font.system`、`Font.custom`、`scaledValueForValue:`、カウントが一致する `LocalizedStringKey` を見た。`WorkplaceThumbnailView` と `PayBreakdownView` は、`bl` もアクセサアドレスの `adrp` + `add` も 0 件。
+
+記号の未 12 は、専用関数の中に `systemName` の呼び出しが無い。`RootView` 29、`LaunchAnimationView` 12、`WorkplaceImportView` 37、`CalendarAccessView` 8、`AboutView` 8、`RequestHoursStockSheet` 17、`LateMessageView` 26、`LateTemplateSheet` 11、`PayScheduleSettingView` 5、`PayTermsEditorView` 42、`TodoEditor` 9。サムネイルと内訳は 0。
+
+文言の未 5 も、カウント一致の画面文言が専用関数に無い。起動の専用関数に日本語の見出しは無い。概要の専用関数に日本語の見出しは無い。支払日設定の `0x10014cb30` が触る「支給の見込み」は、`sub #0x20` のあと `guide.incomeWallAdd` になる。サムネイルと内訳は専用関数が無い。
+
+フォントの未 7 は、専用関数が `Font.system` も `Font.custom` も `scaledValueForValue:` も呼ばない。対象は起動、サムネイル、勤務先の編集、概要、内訳、支払日の設定、支払いの周期の編集。design size の即値は置いていない。
+
+この走査で記号・文言・フォントの件数は動いていない。確は 111、未は 110。記号の確は 2、未は 12。文言の確は 28、未は 5。フォントの未は 7。

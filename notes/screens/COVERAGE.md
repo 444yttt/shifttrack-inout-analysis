@@ -82,4 +82,4 @@
 
 `PayBreakdownView` は、アクセサ `0x1001165c0` への `bl` も `adrp` + `add` も無い。積み順は 36 画面とも未。今回 確にした文言は、その画面のアクセサだけを呼ぶ関数が cstring の先頭を読むもの。画面の中の位置は見ていない。
 
-画面別の命令は `calendar.md`、`workplace.md`、`pay.md`、`shift.md`、`settings.md`、`root.md`。スクショとの突き合わせは `observed.md`。記号・文言・フォントの今回の突き合わせは `parallel-symbols.md`。設定下段の追加分は、文言も記号も列を動かしていない。設定の文言は元から確、記号は `観` のまま。広告の文は移植しない。給与、重なり、`WeekTemplate`、保存先、通知は `logic.md`。opaque 型から読んだ modifier 順は `opaque.md`。
+画面別の命令は `calendar.md`、`workplace.md`、`pay.md`、`shift.md`、`settings.md`、`root.md`。スクショとの突き合わせは `observed.md`。記号・文言・フォントの今回の突き合わせは `parallel-symbols.md`。設定下段の追加分は、文言も記号も列を動かしていない。設定の文言は元から確、記号は `観` のまま。広告の文は移植しない。残りの未は、その画面だけの関数を全部見て、`systemName` と design size とカウント一致の見出しが無かったので未のまま。件数は動かしていない。給与、重なり、`WeekTemplate`、保存先、通知は `logic.md`。opaque 型から読んだ modifier 順は `opaque.md`。
