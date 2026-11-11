@@ -246,6 +246,112 @@ body または、以前から結んであるビルダーが、cstring の先頭�
 
 検証は `tests/UiFont.swift` と `tools/verify_macos.py`。フォント名の即値と、画面型の名前がバイナリにあることを見る。
 
+## Assets.car の名前と色
+
+`Assets.car` と `Doto-BlackRound.ttf` は公開リポジトリに置いていない。フォントは Google Fonts の Doto なので、製品側は公式の配布を使う。カタログの画像バイトも保存していない。
+
+手順は `tools/decode_assets_car.py`。BOMStore の索引から `RENDITIONS` と `APPEARANCEKEYS` を読み、CSI ヘッダ（`ISTC`）の layout 1009 を色として読む。これは `assetutil --info` が見るのと同じ CoreUI レコードである。`assetutil` 自体は、カタログを公開ランナーへ置くことになるため実行していない。取り出した値は `notes/assets.json`。
+
+色は sRGB（color info の下位 8 ビットが 1）。成分は R, G, B, A の 0...1。
+
+| 名前 | appearance | sRGB8 |
+| --- | --- | --- |
+| AccentColor | `UIAppearanceAny`（0） | `0, 0, 0, 255` |
+| AccentColor | `UIAppearanceDark`（1） | `255, 255, 255, 255` |
+| LaunchBackground | `UIAppearanceAny` のみ | `195, 255, 119, 255`（成分 0.765, 1, 0.467, 1） |
+
+ダークの AccentColor は白、それ以外は黒。LaunchBackground にダークのレコードは無い。
+
+画像セットの facet 名: `AbukuCameraIcon`, `AccentColor`, `AppIcon`, `GraffLogo`, `LaunchBackground`, `LifeClctIcon`, `LifeCtrlIcon`, `Logo`, `PickPicIcon`, `SetupCalendar`, `SetupPay`, `SetupShift`, `SetupWorkplace`, `SourceBrowserIcon`, `TimeDay`, `TimeMorning`, `TimeNight`。
+
+レンディションのサイズ。JPEG は SOF の画素、それ以外は CSI の幅と高さ。scale factor はいずれも 100（@1x の記録）で、Idiom フィールドは AppIcon 系だけ 1、ほかは 0。
+
+- `SetupCalendar.jpg` / `SetupPay.jpg` / `SetupShift.jpg` / `SetupWorkplace.jpg`: 1200×800
+- `TimeDay.jpg` / `TimeMorning.jpg`: 1400×583。`TimeNight.jpg`: 1400×582
+- `Logo.png`: 1173×1138。`graff_logo.png` と `graff_logo_dark.png`: 1637×615。後者だけ `UIAppearanceDark`
+- `icon.png`: 180×180 が 1、256×256 が 3、1024×1024 が 1。`AppIcon-1024.png`: 1024×1024。`AppIcon` は layout 1010 のマルチサイズで、画素は持たない
+
+バイナリとの接続。`AccentColor` と `LaunchBackground` の綴りは Mach-O の cstring に無い。色名を即値で読む命令も、この走査では見つかっていない。SwiftUI がカタログの AccentColor を自動で使う可能性はあるが、命令では結べていない。
+
+cstring としてあるのは次だけ。
+
+- `SourceBrowserIcon` は `0x1004ff3e0`
+- `LifeCtrlIcon` `0x1005b3080`、直前のラベル `LIFE/CTRL` `0x1005b3060`
+- `LifeClctIcon` `0x1005b30b8`、`LIFE/CLCT` `0x1005b3098`
+- `PickPicIcon` `0x1005b30f0`、`PICK/PIC` `0x1005b30d0`
+- `AbukuCameraIcon` `0x1005b3128`、`ABUKU/CAMERA` `0x1005b3108`
+
+これらは `__DATA` の名前表で、どのビューの `Image` が読むかは未接続。
+
+## 画面ごとの関数
+
+これは view tree の積み順ではない。その画面型のアクセサを呼び、ほかの画面型のアクセサは呼ばない関数のうち、いちばん大きいものをその画面のコードとした。コンテナ（複数の画面型を呼ぶ関数）は外してある。
+
+| 画面 | 関数 | サイズ |
+| --- | --- | --- |
+| AboutView | `0x100004c68` | 952 |
+| CalendarAccessView | `0x100038a40` | 4196 |
+| CalendarDayView | `0x10003cdd8` | 4608 |
+| CalendarTabView | `0x100062150` | 10368 |
+| GuideOverlay | `0x1000a19b4` | 3348 |
+| InOutTabBar | `0x100025004` | 1908 |
+| IncomeView | `0x1000b7b78` | 2936 |
+| LateMessageView | `0x1000c551c` | 4456 |
+| LateTemplateEditorView | `0x1000cc078` | 2728 |
+| LateTemplateSheet | `0x1000cda38` | 1636 |
+| LaunchAnimationView | `0x1000d67ec` | 1068 |
+| LocationPickerView | `0x100237b98` | 1772 |
+| OnboardingView | `0x10010ea20` | 4788 |
+| PayPeriodDetailView | `0x10014e3b4` | 2060 |
+| PayPeriodsView | `0x1001460b8` | 1864 |
+| PayScheduleEditorView | `0x10016a974` | 2144 |
+| PayScheduleSettingView | `0x10014cb30` | 1824 |
+| PayTermsEditorView | `0x10015e4ac` | 4512 |
+| RequestHoursStockSheet | `0x10020d3d4` | 1944 |
+| RootView | `0x10017fc6c` | 3620 |
+| SettingsView | `0x10018dc8c` | 5164 |
+| ShiftCheckView | `0x1001a6ab4` | 3276 |
+| ShiftPartEditorView | `0x1001f0144` | 3040 |
+| ShiftRepeatEditorView | `0x1001fa340` | 2280 |
+| ShiftRequestPlannerView | `0x1002091c4` | 2976 |
+| ShiftRequestView | `0x1002145c8` | 2872 |
+| UnconfirmedShiftsView | `0x10014fa50` | 1744 |
+| WallEditorView | `0x1000be874` | 2800 |
+| WorkplaceDirectoryView | `0x10021dc9c` | 3776 |
+| WorkplaceEditorView | `0x10022e830` | 8772 |
+| WorkplaceImportView | `0x100243ca8` | 2388 |
+| WorkplaceListView | `0x10025ca2c` | 8900 |
+
+`PayBreakdownView` と `WorkplaceThumbnailView` は、ほかの画面と分かれた関数が無い。`CalendarTabView` の body 分岐先 `0x1000541dc` は `CalendarDayView` も呼ぶので、上の表ではタブ側の専用関数 `0x100062150` を載せている。一覧カード `0x1002616f4` は `WorkplaceListView` だけを呼ぶ 7216 バイトで、上の 8900 バイト関数の次に大きい。
+
+`VStack` / `HStack` の中の順序、余白、角丸はまだ読んでいない。
+
+## Image(systemName:) の 41 呼び出し
+
+スタブは `0x1003fe360`。直前のレジスタが small string か、カウント付き cstring なら名前を確定した。
+
+| 名前 | 呼び出し |
+| --- | --- |
+| `calendar` | `0x1000253f0`（`w21 == 1`） |
+| `building.2` | `0x1000253f0`（`w21 == 2`） |
+| `yensign` | `0x1000253f0`（`w21 == 3`） |
+| `slider.horizontal.3` | `0x1000253f0` が組み立てる。`w21 == 0` のとき二つのワードの順が、ほかの `systemName` 呼び出しと逆になる。0 番がこの記号だとまでは言えない |
+| `chevron.right` | `0x100005bec`, `0x1000b7528`, `0x10018fa54`, `0x1002263b4`, `0x10026dfc0` |
+| `arrow.up.right` | `0x100006a18`, `0x100199f98` |
+| `plus` | `0x10006be48`, `0x10006e650`, `0x1000b88d0`, `0x1001727b4`, `0x100193ebc`, `0x10021f8cc`, `0x100226810`, `0x10026fae8` |
+| `xmark` | `0x100093d24`, `0x10020cc00` |
+| `questionmark` | `0x1000a10f0` |
+| `minus` | `0x100193588` |
+| `minus.circle` | `0x1001ae220` |
+| `ellipsis` | `0x100222cec`, `0x100269c24` |
+| `checkmark` | `0x100245c3c` |
+| `pencil` | `0x10026905c` |
+| 「この日のシフト」 | `0x100067648`, `0x10017ca58`。カウント 0x15 の 21 バイトで、SF Symbol の名前ではない |
+
+`0x1000253f0` は `InOutTabBar` の関数 `0x100025004` にある。`w21` で上の 4 つを選ぶ。
+
+まだ名前が取れない呼び出し: `0x10002c04c`, `0x100043474`, `0x10004436c`, `0x100066e2c`, `0x10008ab80`, `0x1001f4cf8`, `0x1001f52f0`, `0x100205a04`, `0x100208bfc`, `0x1002216a4`, `0x100264c30`, `0x10026d1b0`, `0x1002798b8`, `0x10027daa8`。
+
 ## 未回収。画面で見る必要があるもの
 
 - 日給の `UUID.==` がどの二つのフィールドか。加算と「日給」ラベルの分岐自体は命令にある
@@ -262,7 +368,7 @@ body または、以前から結んであるビルダーが、cstring の先頭�
 - 重なり検査 `0x100016734` が「のシフトがあります」以外の文言を、どの条件で足すか。移動時間の不足と時刻の重なりの式は閉じていない
 - `WeekTemplate` を一日または一週間へ展開する命令。このタップの対象は `ShiftPart` である
 - 置いた結果が `AppModel` のどの Published へ入るか。配置関数は `ShiftInstance` のアクセサを、既存の `partID` を読む以外には呼んでいない
-- `Assets.car` の色、画像、Doto のフォントファイル。公開バイナリには `Doto-BlackRound` のファイルは無く、名前は `Font.custom` の即値だけである
-- 各画面の view tree、余白、角丸、色、ジェスチャ、シート、遷移、空状態。body を単一の分岐で結べたのは `CalendarTabView` と `IncomeView` だけである
+- 各画面の `VStack` / `HStack` の積み順、余白、角丸、ジェスチャ、シート、遷移。画面型とその専用関数は上で結んだ
+- `AccentColor` と `LaunchBackground` を命令がどのビューで塗るか。名前の cstring は Mach-O に無い
 - `0x1000697b4` の Doto のサイズ。`0x1000bc508` のフォント名
-- `Image(systemName:)` の残り 31 呼び出しの記号名と、読めた 6 つの記号がどの画面に付くか
+- 上に挙げた 14 個の `Image(systemName:)` で、名前の即値がまだ読めていないもの。タブバーの `w21 == 0`

@@ -156,6 +156,7 @@ def main() -> int:
     check_pay_conditions(data)
     check_pattern_place(data)
     check_ui_font(data)
+    check_asset_catalog(data)
 
     check(re.search(rb"ca-app-pub-[0-9]{16}/[0-9]{10}", data) is None, "no ad unit id")
     check(
@@ -586,6 +587,25 @@ def check_ui_font(data: bytes) -> None:
         check(name in data, f"view type {name.decode()} is in the metadata")
     shown = branch_target(struct.unpack_from("<I", data, 0x26F4B8)[0], 0x10026F4B8)
     check(shown == 0x1003FDE2C, f"yen text uses Font.custom at {shown:#x}")
+
+
+def check_asset_catalog(data: bytes) -> None:
+    import json
+
+    catalog = json.loads((ROOT / "notes" / "assets.json").read_text())
+    colors = {
+        (item["name"], item["appearance"]): item["color"]["srgb8"]
+        for item in catalog["renditions"]
+        if item.get("color")
+    }
+    check(colors[("AccentColor", "UIAppearanceAny")] == [0, 0, 0, 255], "AccentColor light is black")
+    check(colors[("AccentColor", "UIAppearanceDark")] == [255, 255, 255, 255], "AccentColor dark is white")
+    check(colors[("LaunchBackground", "UIAppearanceAny")] == [195, 255, 119, 255], "launch background")
+    check("SourceBrowserIcon" in catalog["facets"], "source browser facet")
+    check(b"SourceBrowserIcon" in data, "source browser name is in the binary")
+    check(b"AccentColor" not in data, "AccentColor is not a cstring in the Mach-O")
+    check(struct.unpack_from("<I", data, 0x6BE3C)[0] == 0x528D8E00, "plus symbol immediate")
+    check(struct.unpack_from("<I", data, 0x25350)[0] == 0xD28C2C69, "calendar symbol immediate")
 
 
 def macos_tools() -> None:
