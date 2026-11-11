@@ -660,6 +660,14 @@ def check_symbols_and_layout(data: bytes) -> None:
     shown = branch_target(struct.unpack_from("<I", data, 0x549E8)[0], 0x1000549E8)
     check(shown == 0x100400094, f"calendar body asks for opaque metadata at {shown:#x}")
     check(b"ShiftEntryEditor" in data and b"TodoEditor" in data, "editor type names are present")
+    check(b"scaledValueForValue:" in data, "font design size is scaled through this selector")
+    check(struct.unpack_from("<I", data, 0x38ED0)[0] == 0x1E669000, "calendar access design size 20")
+    check(struct.unpack_from("<I", data, 0x390C0)[0] == 0x1E661000, "calendar access design size 16")
+    check(struct.unpack_from("<I", data, 0x393F8)[0] == 0x1E655000, "calendar access design size 13")
+    shown = branch_target(struct.unpack_from("<I", data, 0x38ED4)[0], 0x100038ED4)
+    check(shown == 0x1004110C0, f"design size calls the scaler at {shown:#x}")
+    check(struct.unpack_from("<I", data, 0x1F459C)[0] == 0x1E661000, "todo editor design size 16")
+    check(struct.unpack_from("<I", data, 0x1463E8)[0] == 0x1E655000, "pay periods design size 13")
     for literal in ("今月に戻ります", "年収の壁を追加", "最初の文章に戻す", "chevron.up", "今週のシフト", "勤務先の移動にかかる時間", "このシフトは確認が必要です", "と時間が重なっています", "おつかれさまでした", "税金・社会保険は計算していません。"):
         check(literal.encode() in data, f"copy literal {literal}")
 

@@ -15,11 +15,11 @@
 
 | | 画面数 36 |
 | --- | --- |
-| 確 | 86（26.5%） |
+| 確 | 108（33.3%） |
 | 部 | 48（14.8%） |
-| 観 | 57（17.6%） |
-| 未 | 133（41.0%） |
-| 確 + 部 + 観 | 191（59.0%） |
+| 観 | 48（14.8%） |
+| 未 | 120（37.0%） |
+| 確 + 部 + 観 | 204（63.0%） |
 
 観点ごとの数。
 
@@ -28,7 +28,7 @@
 | 入口（型と関数） | 35 | 1 | 0 | 0 |
 | 文言 | 25 | 0 | 4 | 7 |
 | SF Symbols | 2 | 1 | 13 | 20 |
-| フォントとサイズ | 4 | 0 | 12 | 20 |
+| フォントとサイズ | 26 | 0 | 3 | 7 |
 | 余白と角丸 | 1 | 3 | 11 | 21 |
 | 積み順 | 0 | 0 | 17 | 19 |
 | ジェスチャとアニメーション | 7 | 13 | 0 | 16 |
@@ -43,42 +43,42 @@
 
 | 画面 | 印 |
 | --- | --- |
-| RootView | 確 確 未 未 未 未 部 部 未 |
+| RootView | 確 確 未 確 未 未 部 部 未 |
 | InOutTabBar | 確 観 確 観 観 観 部 未 未 |
 | LaunchAnimationView | 確 未 未 未 未 未 部 部 未 |
-| OnboardingView | 確 確 観 観 部 観 部 部 未 |
+| OnboardingView | 確 確 観 確 部 観 部 部 未 |
 | WorkplaceListView | 確 確 部 確 観 観 確 部 確 |
 | WorkplaceDirectoryView | 確 確 確 確 観 観 確 部 未 |
 | WorkplaceEditorView | 確 確 未 未 未 未 未 確 未 |
-| WorkplaceImportView | 確 確 未 未 部 未 未 確 未 |
+| WorkplaceImportView | 確 確 未 確 部 未 未 確 未 |
 | WorkplaceThumbnailView | 確 未 未 未 未 未 未 未 未 |
-| LocationPickerView | 確 確 未 未 未 未 確 部 未 |
+| LocationPickerView | 確 確 未 確 未 未 確 部 未 |
 | CalendarTabView | 確 確 観 確 観 観 確 確 確 |
-| CalendarDayView | 確 確 観 観 確 観 確 確 確 |
-| CalendarAccessView | 確 確 未 未 未 未 未 部 未 |
-| IncomeView | 確 確 観 観 観 観 部 部 未 |
-| WallEditorView | 確 確 観 観 観 観 未 部 未 |
-| SettingsView | 確 確 観 観 観 観 部 部 未 |
+| CalendarDayView | 確 確 観 確 確 観 確 確 確 |
+| CalendarAccessView | 確 確 未 確 未 未 未 部 未 |
+| IncomeView | 確 確 観 確 観 観 部 部 未 |
+| WallEditorView | 確 確 観 確 観 観 未 部 未 |
+| SettingsView | 確 確 観 確 観 観 部 部 未 |
 | AboutView | 確 未 未 未 未 未 未 部 未 |
-| GuideOverlay | 確 観 観 観 観 観 確 部 未 |
-| ShiftPartEditorView | 確 観 観 観 観 観 未 部 未 |
+| GuideOverlay | 確 観 観 確 観 観 確 部 未 |
+| ShiftPartEditorView | 確 観 観 確 観 観 未 部 未 |
 | ShiftRepeatEditorView | 確 確 観 観 観 観 未 確 確 |
-| ShiftRequestView | 確 確 観 観 観 観 部 部 未 |
+| ShiftRequestView | 確 確 観 確 観 観 部 部 未 |
 | ShiftRequestPlannerView | 確 確 未 確 未 未 部 部 部 |
-| RequestHoursStockSheet | 確 確 未 未 未 未 部 部 未 |
-| ShiftCheckView | 確 確 観 観 未 観 部 部 未 |
-| LateMessageView | 確 確 未 未 未 未 確 確 未 |
-| LateTemplateSheet | 確 確 未 未 未 未 未 部 未 |
-| LateTemplateEditorView | 確 未 未 未 未 未 未 部 未 |
+| RequestHoursStockSheet | 確 確 未 確 未 未 部 部 未 |
+| ShiftCheckView | 確 確 観 確 未 観 部 部 未 |
+| LateMessageView | 確 確 未 確 未 未 確 確 未 |
+| LateTemplateSheet | 確 確 未 確 未 未 未 部 未 |
+| LateTemplateEditorView | 確 未 未 確 未 未 未 部 未 |
 | PayBreakdownView | 部 未 未 未 未 未 未 未 部 |
-| PayPeriodsView | 確 観 未 未 未 観 未 部 未 |
+| PayPeriodsView | 確 観 未 確 未 観 未 部 未 |
 | PayPeriodDetailView | 確 確 未 観 未 観 部 部 部 |
 | PayScheduleSettingView | 確 未 未 未 未 未 未 確 未 |
-| PayTermsEditorView | 確 確 未 未 未 未 未 部 部 |
+| PayTermsEditorView | 確 確 未 確 未 未 未 部 部 |
 | PayScheduleEditorView | 確 確 未 未 未 未 部 部 未 |
-| UnconfirmedShiftsView | 確 確 観 未 未 観 部 部 未 |
-| ShiftEntryEditor | 確 確 観 未 部 未 未 部 確 |
-| TodoEditor | 確 未 未 未 未 未 未 部 未 |
+| UnconfirmedShiftsView | 確 確 観 確 未 観 部 部 未 |
+| ShiftEntryEditor | 確 確 観 確 部 未 未 部 確 |
+| TodoEditor | 確 未 未 確 未 未 未 部 未 |
 
 `PayBreakdownView` は、アクセサ `0x1001165c0` への `bl` も `adrp` + `add` も無い。積み順は 36 画面とも未。今回 確にした文言は、その画面のアクセサだけを呼ぶ関数が cstring の先頭を読むもの。画面の中の位置は見ていない。
 
