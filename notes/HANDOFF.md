@@ -127,6 +127,124 @@ Timeline の `by`（30秒が2箇所、1秒が1箇所）は、このクロージ�
 
 分の折り返しと、`start >= end` で終了を翌日にする比較は `tests/PatternPlace.swift` と `tools/verify_macos.py` にある。
 
+## 画面。型と、命令が読む文言
+
+元の Swift ソースではない。画面を見て書いた配置ではない。`Assets.car` とローカライズ資源はこの公開バイナリにも、この解析環境にも無い。色、画像、フォントファイルの中身はここから取れない。広告の `BannerAdView` は型としてはあるが、写す対象から外す。
+
+`__swift5_types` にある画面型は次のとおり。descriptor は型名の位置で、アクセサは descriptor +12 の相対ポインタ。
+
+| 型 | descriptor | アクセサ |
+| --- | --- | --- |
+| RootView | `0x1004403f8` | `0x10017876c` |
+| InOutTab / InOutTabBar | `0x10043dca4` / `0x10043dcc0` | InOutTabBar は `0x10002f47c` |
+| LaunchAnimationView | `0x10043f40c` | `0x1000d6708` |
+| OnboardingView | `0x10043f998` | `0x10010423c` |
+| WorkplaceListView | `0x100440e64` | `0x100255730` |
+| WorkplaceDirectoryView | `0x100440b40` | `0x10021c788` |
+| WorkplaceEditorView | `0x100440b90` | `0x10022ce3c` |
+| WorkplaceImportView | `0x100440cd8` | `0x100249690` |
+| WorkplaceThumbnailView | `0x100440eb4` | `0x10027a1d8` |
+| LocationPickerView | `0x100440bb8` | `0x10023c87c` |
+| CalendarTabView | `0x10043e520` | `0x100071b0c` |
+| CalendarDayView | `0x10043e434` | `0x10003b030` |
+| CalendarAccessView | `0x10043e3b4` | `0x100038674` |
+| IncomeView | `0x10043f1d0` | `0x1000ba02c` |
+| WallEditorView | `0x10043f1f8` | `0x1000c1994` |
+| SettingsView | `0x100440448` | `0x10018d1c8` |
+| AboutView | `0x10043d9ac` | `0x100009a10` |
+| GuideOverlay | `0x10043edd0` | `0x1000a4f84` |
+| ShiftPartEditorView | `0x1004408a0` | `0x1001f605c` |
+| ShiftRepeatEditorView | `0x100440968` | `0x1001fc9bc` |
+| ShiftRequestView | `0x100440a58` | `0x100213818` |
+| ShiftRequestPlannerView | `0x1004409b8` | `0x1001fecf4` |
+| RequestHoursStockSheet | `0x1004409e0` | `0x10020fefc` |
+| ShiftCheckView | `0x1004404dc` | `0x1001a3730` |
+| LateMessageView | `0x10043f300` | `0x1000cede8` |
+| LateTemplateSheet | `0x10043f344` | `0x1000d5358` |
+| LateTemplateEditorView | `0x10043f394` | `0x1000d59c8` |
+| PayBreakdownView | `0x10043fa30` | `0x1001165c0` |
+| PayPeriodsView | `0x100440050` | `0x100153adc` |
+| PayPeriodDetailView | `0x100440078` | `0x100153ed8` |
+| PayScheduleSettingView | `0x100440150` | `0x100158a58` |
+| PayTermsEditorView | `0x100440218` | `0x10015b660` |
+| PayScheduleEditorView | `0x100440240` | `0x10015b810` |
+| UnconfirmedShiftsView | `0x100440028` | `0x100151334` |
+
+body が単一の `B` で繋がっているのは、確認できた範囲では `CalendarTabView` の `0x100071b20` → `0x1000541dc` と、`IncomeView` の `0x1000ba040` → `0x1000b2154` だけである。他の画面は、アクセサの次が body そのものとは限らない。
+
+body または、以前から結んであるビルダーが、cstring の先頭を読む文言:
+
+- `CalendarTabView` body `0x1000541dc` は「この日に置く」
+- `CalendarDayView` の `0x10003cdd8`（4608 バイト）は「確認が必要です」
+- 一覧カード `0x1002616f4` は「シフトを追加」。金額側は前節のとおり「終わりまで あと 」と「円」。これは構築順であり、画面の配置ではない
+- `0x10025ca2c`（8900 バイト。一覧アクセサの近く）は「今日のお給料」「今月のお給料」「支払日を設定」。この関数が一覧の body であることは未確定
+
+画面型へは未接続のまま、関数が cstring の先頭を読む文言。製品は文言として使ってよい。どの画面のどの位置かは、この表だけでは決まらない。
+
+- `0x1000c4b00` 遅刻の定型: 「寝坊してしまって」「寝坊してしまい」「体調が優れないため」「体調が悪くて」「電車の遅延で」「分ほど遅れます」
+- `0x1000c6684` 「電車の遅延のため」「① 遅れる理由」「② 遅れる時間」「③ 言葉づかい」「文章はここで直せます。①〜③の答えを変えると作り直します。」
+- `0x1000d2a5c` 「分くらい遅れます」「ごろになります」
+- `0x10018dc8c` 「メッセージの文章」「シフトの重なり」「IN/OUT について」
+- `0x100194a98` 「設定アプリで許可する」「リマインダー」「位置情報の許可」
+- `0x100190464` 「位置情報を許可する」「シフトの前に通知」
+- `0x100038a40` 「入力を続ける」「設定アプリを開く」
+- `0x10022e830` 「遅刻連絡の文章の型」「住所・位置（任意）」「この勤務先を削除」
+- `0x10021ec98` 「勤務先を追加」「シフトパターンを開く」
+- `0x10023eff4` 「ショップカード」「Google マップのリンク」「Google マップ」
+- `0x100107ec0` 「勤務先を登録」「いつものシフト」「お給料の決まり」
+- `0x100067fec` と `0x10006852c` 「月の収入見込み」「シフトパターンを編集」
+- `0x10010ca0c` 「深夜割増（22時〜5時）」「この日のシフトを編集」
+- `0x1001bdcfc` 「追加して次へ」「シフトパターンに追加」「勤務先に戻す」「行き先の名前」
+- `0x1001ba1b4` 「このまま保存」「この日のシフトを外す」
+- `0x1001685ac` 「決まりの変更を追加」「締め日と支払日」「締めと支払日」「締めの曜日までの7日間が1回分です。0日は締め日に支払います。」
+- `0x100115d6c` 「締め日に支給」「分単位（開始は」
+- `0x1001138b4` 「勤務日に支給」「お給料（交通費の前）」
+- `0x100166994` 「交通費を削除」「交通費を追加」
+- `0x10014bcdc` 「未確認の勤務 」「終わった勤務を押すと、時間・休憩を確認できます。」
+- `0x10014e3b4` 「明細の金額を保存」「差引支給額の差」
+- `0x10008df54` 「休憩の決まりを追加」「この時間を超えたら」
+- `0x1002145c8` 「ストックして入れる」「例：家の用事で」
+- `0x10017c7f0` 「App Store を開く」「この日のシフトを編集」
+
+「この日のシフトはありません」は `0x100502200` に cstring としてある。上の adrp / add / sub #0x20 の走査では、どの関数もこの先頭を読んでいない。
+
+## フォントと記号
+
+`Font.custom(_:size:relativeTo:)` のスタブは `0x1003fde2c`。名前は cstring ではなく、15 バイトの small string 即値である。21 箇所が両半分を即値で渡す。バイト列は `Doto-BlackRound`。`0x10026f494` からの `mov` / `movk` がそれである。金額の `0x10026efb0` は `0x10026f4b8` でこのフォントを呼び、その直前のサイズは 36。
+
+即値でサイズまで読めた呼び出し:
+
+| 呼び出し | 関数 | サイズ |
+| --- | --- | --- |
+| `0x10005e4d4` | `0x10005e184` | 64 |
+| `0x10005e7cc` | `0x10005e184` | 24 |
+| `0x100063208` | `0x100062150` | 18 |
+| `0x100069364` | `0x100069168` | 18 |
+| `0x1000b4334` | `0x1000b41c0` | 64 |
+| `0x1000b50b8` | `0x1000b4ee4` | 64 |
+| `0x1000bade0` | `0x1000bac3c` | 36 |
+| `0x1000bb3b4` | `0x1000bb108` | 36 |
+| `0x1000bc12c` | `0x1000bbcb0` | 24 |
+| `0x100193a6c` | `0x100193884` | 24 |
+| `0x1001abe90` | `0x1001aba88` | 44 |
+| `0x1001af490` | `0x1001af2e0` | 36 |
+| `0x100203d48` | `0x100203ae8` | 40 |
+| `0x1002064b8` | `0x100206118` | 20 |
+| `0x1002232f4` | `0x100222e8c` | 36 |
+| `0x100260bac` | `0x100260714` | 64 |
+| `0x100266d3c` | `0x100266998` | 36 |
+| `0x10026be80` | `0x10026bc9c` | 18 |
+| `0x10026e3fc` | `0x10026e260` | 36 |
+| `0x10026f4b8` | `0x10026efb0` | 36 |
+
+`0x1000697b4` も名前の即値は `Doto-BlackRound` だが、サイズは `v8` で、呼び出し直前の即値ではない。`0x1000bc508` のサイズは 24 だが、名前の前半レジスタは別の値で上書きされており、`Doto-BlackRound` とは確定できない。
+
+`Image(systemName:)` のスタブは `0x1003fe360`。呼び出し 41 のうち、直前の即値または cstring 先頭で名前が読めたのは `chevron.right`、`arrow.up.right`、`questionmark`、`minus.circle`、`checkmark`、`slider.horizontal.3`。残り 31 は、この直前では名前が即値ではない。どの画面のどの位置かも未接続。
+
+`Font.system`、`Font.Weight` の bold / heavy / medium / semibold、`UIFontWeightBold` / `Medium` / `Regular`、`RoundedRectangle`、`RoundedCornerStyle.continuous` / `circular`、`padding`、`shadow`、`fullScreenCover` は import としてある。呼び出し位置と数値は、この回では画面へ結んでいない。角丸、余白、色、アニメーションの数値を、ここから足さない。
+
+検証は `tests/UiFont.swift` と `tools/verify_macos.py`。フォント名の即値と、画面型の名前がバイナリにあることを見る。
+
 ## 未回収。画面で見る必要があるもの
 
 - 日給の `UUID.==` がどの二つのフィールドか。加算と「日給」ラベルの分岐自体は命令にある
@@ -143,3 +261,7 @@ Timeline の `by`（30秒が2箇所、1秒が1箇所）は、このクロージ�
 - 重なり検査 `0x100016734` が「のシフトがあります」以外の文言を、どの条件で足すか。移動時間の不足と時刻の重なりの式は閉じていない
 - `WeekTemplate` を一日または一週間へ展開する命令。このタップの対象は `ShiftPart` である
 - 置いた結果が `AppModel` のどの Published へ入るか。配置関数は `ShiftInstance` のアクセサを、既存の `partID` を読む以外には呼んでいない
+- `Assets.car` の色、画像、Doto のフォントファイル。公開バイナリには `Doto-BlackRound` のファイルは無く、名前は `Font.custom` の即値だけである
+- 各画面の view tree、余白、角丸、色、ジェスチャ、シート、遷移、空状態。body を単一の分岐で結べたのは `CalendarTabView` と `IncomeView` だけである
+- `0x1000697b4` の Doto のサイズ。`0x1000bc508` のフォント名
+- `Image(systemName:)` の残り 31 呼び出しの記号名と、読めた 6 つの記号がどの画面に付くか

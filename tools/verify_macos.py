@@ -155,6 +155,7 @@ def main() -> int:
     check_pay_amount(data)
     check_pay_conditions(data)
     check_pattern_place(data)
+    check_ui_font(data)
 
     check(re.search(rb"ca-app-pub-[0-9]{16}/[0-9]{10}", data) is None, "no ad unit id")
     check(
@@ -554,6 +555,39 @@ def check_pattern_place(data: bytes) -> None:
     check(data[0x5001B0:0x5001B0 + len("のシフトがあります".encode())] == "のシフトがあります".encode(), "existing-shift clash phrase")
 
 
+def doto_name_from_halves(low: int, high: int) -> str:
+    count = (high >> 56) & 0xF
+    raw = low.to_bytes(8, "little") + high.to_bytes(8, "little")
+    return raw[:count].decode()
+
+
+def check_ui_font(data: bytes) -> None:
+    words = (
+        (0x26F494, 0xD28DE880),
+        (0x26F498, 0xF2ADEE80),
+        (0x26F49C, 0xF2C845A0),
+        (0x26F4A0, 0xF2EC2D80),
+        (0x26F4A4, 0xD28D6C61),
+        (0x26F4A8, 0xF2ADEA41),
+        (0x26F4AC, 0xF2CDCEA1),
+        (0x26F4B0, 0xF2FDEC81),
+        (0x6935C, 0x1E665000),
+        (0x2064B0, 0x1E669000),
+    )
+    for off, word in words:
+        got = struct.unpack_from("<I", data, off)[0]
+        check(got == word, f"ui-font word at {off:#x}")
+    # The eight mov/movk immediates above assemble the small string.
+    low = 0x6F44 | (0x6F74 << 16) | (0x422D << 32) | (0x616C << 48)
+    high = 0x6B63 | (0x6F52 << 16) | (0x6E75 << 32) | (0xEF64 << 48)
+    check(doto_name_from_halves(low, high) == "Doto-BlackRound", "custom font name")
+    check(b"Doto-BlackRound" not in data, "font name is an immediate, not a cstring")
+    for name in (b"WorkplaceListView", b"CalendarTabView", b"IncomeView", b"SettingsView", b"LaunchAnimationView"):
+        check(name in data, f"view type {name.decode()} is in the metadata")
+    shown = branch_target(struct.unpack_from("<I", data, 0x26F4B8)[0], 0x10026F4B8)
+    check(shown == 0x1003FDE2C, f"yen text uses Font.custom at {shown:#x}")
+
+
 def macos_tools() -> None:
     if not Path("/usr/bin/sw_vers").exists():
         print("macOS tools skipped (not macOS)")
@@ -611,6 +645,7 @@ def macos_tools() -> None:
             "PayAmount.swift",
             "PayConditions.swift",
             "PatternPlace.swift",
+            "UiFont.swift",
         ):
             proc = subprocess.run([swift, str(ROOT / "tests" / name)], text=True, capture_output=True)
             print((proc.stdout or "") + (proc.stderr or ""))
