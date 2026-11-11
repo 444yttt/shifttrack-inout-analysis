@@ -43,6 +43,8 @@ descriptor `0x10043f40c`、アクセサ `0x1000d6708`。専用関数 `0x1000d67e
 
 descriptor `0x10043edd0`、アクセサ `0x1000a4f84`。専用関数 `0x1000a19b4`。
 
+確定。専用関数 `0x1000a19b4` は `0x1000a1cdc` で `w0 = 1` を渡し、`onTapGesture(count:perform:)` を呼ぶ。この 1 は count である。
+
 部分。アクセサの近く `0x1000a0d80` は `easeInOut` に 0.3（`0x3FD3333333333333`）を渡す。`0x1000a6d34` からの 4 つの関数は `spring(response:dampingFraction:blendDuration:)` を作り、グローバルへ保存する。blend はいずれも 0。
 
 | 保存先 | response | damping |
