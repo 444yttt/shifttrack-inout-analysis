@@ -17,6 +17,8 @@
 | 画面型と Doto-BlackRound | `d309fae3b9dfa9ea062e13082a1fb4ae88c647e1` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42978746906 |
 | カタログの色と記号名 | `5c9423cdc8475c3ff01eee3fad5106e617f75c35` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42980044157 |
 | タブの記号、残りの systemName、レイアウトの即値 | `90149dd899310aa2f757d402424c420b9737da16` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42981594356 |
+| 画面単位の移植仕様と網羅率 | `fc7b4b597db649f43c83f176c3e1468c24f9145f` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42984588154 |
+| opaque 型から読んだ modifier 順 | `7a72cc0` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42985348451 |
 
 ## 統合してよいもの
 
