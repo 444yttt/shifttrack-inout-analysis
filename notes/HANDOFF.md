@@ -14,6 +14,7 @@
 | 一覧タイムライン、時給履歴、交通費 | `693072de9500e5d6267e4ddef6ded46b9dc31697` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42381152178 |
 | 金額表示の文言 | `02b0f271a08ef15859d1cfc960676d37c1f36ae1` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42443537367 |
 | パターンを選んだ日へ置く | `1da02529ffd3df525a3f95ebe3a7ff564b401c14` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42977835967 |
+| 画面型と Doto-BlackRound | `d309fae3b9dfa9ea062e13082a1fb4ae88c647e1` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42978746906 |
 
 ## 統合してよいもの
 
