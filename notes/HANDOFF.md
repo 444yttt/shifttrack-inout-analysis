@@ -19,6 +19,7 @@
 | タブの記号、残りの systemName、レイアウトの即値 | `90149dd899310aa2f757d402424c420b9737da16` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42981594356 |
 | 画面単位の移植仕様と網羅率 | `fc7b4b597db649f43c83f176c3e1468c24f9145f` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42984588154 |
 | opaque 型から読んだ modifier 順 | `7a72cc0` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42985348451 |
+| 画面関数が読む文言とフォント | `e2a2f5d938028945af7eb720b9b5d7d9e443620c` | https://github.com/444yttt/shifttrack-inout-analysis/actions/runs/42993936784 |
 
 ## 統合してよいもの
 
