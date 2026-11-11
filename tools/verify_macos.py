@@ -641,6 +641,10 @@ def check_symbols_and_layout(data: bytes) -> None:
     check(shown == 0x1003FE15C, f"day radius call at {shown:#x}")
     shown = branch_target(struct.unpack_from("<I", data, 0x1730C)[0], 0x10001730C)
     check(shown == 0x1003FCD4C, f"overlap date compare at {shown:#x}")
+    check(struct.unpack_from("<I", data, 0x3D320)[0] == 0x1E67D000, "day drag distance immediate is 30")
+    check(struct.unpack_from("<I", data, 0x17BA88)[0] == 0xF2E7FAC8, "root easeOut duration high half")
+    check(struct.unpack_from("<d", data, 0x42BC78)[0] == 0.28, "spring response 0.28")
+    check(struct.unpack_from("<d", data, 0x42BC80)[0] == 0.88, "spring damping 0.88")
 
 
 def macos_tools() -> None:

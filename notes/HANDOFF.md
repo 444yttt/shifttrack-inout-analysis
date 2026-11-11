@@ -455,6 +455,23 @@ cstring としてあるのは次だけ。
 
 配置 `0x1001c75ec` は `AppModel` のアクセサ `0x10001c974` を呼ばない。次に呼ぶ `0x1001d1b74` も呼ばない。`AppModel` の `_data`、`_notice`、`_placements`、`lastPlacedAt` への書き込みは、この 2 関数には無い。Published の配列がどれかは未確定。
 
+## 画面単位の移植仕様
+
+一括移植の前に、画面とシート 36 を 9 観点で分けた。仕様は `notes/screens/`。広告と Intelligence は対象外。
+
+確定率は 58 / 324 = 17.9%。確と部を合わせた着手率は 115 / 324 = 35.5%。積み順は 36 画面とも未。数の定義と画面ごとの印は `notes/screens/COVERAGE.md`。
+
+この区切りで命令から足したもの。
+
+- タブの中身を組む `0x100180b74` は `SettingsView`、`IncomeView`、`WorkplaceDirectoryView`、`CalendarTabView`、`WorkplaceListView` をこの順で呼ぶ。比較で 1 つを選ばない。`w21` との対応は未確定
+- カレンダー body `0x1000541dc` は `sheet(item:)` が 3、`fullScreenCover(item:)` が 1、`alert` が 3 系統。開く型は `CalendarDayView`、`ShiftPartEditorView`、`ShiftRepeatEditorView`、`ShiftRequestPlannerView`。どのシートがどの型かは未確定
+- 一覧ハブ `0x100255ab0` は `sheet` が 3、`sheet(item:)` が 5。勤務先エディタ、給与期間、未確認、オンボーディング、遅刻を呼ぶ
+- `DragGesture` の `d0` が 30 なのは `0x10003d320`（日ビュー）、`0x1001ff96c`（依頼）、`0x100257310`（一覧）
+- `RootView` だけの関数 `0x10017ba24` は `easeOut` の duration 0.35 のあと `withAnimation`
+- `easeInOut` の duration 0.15 が 4 箇所、0.3 がガイドの近くに 1 箇所。画面への所属は未確定
+- spring は response / damping / blend 0 で 4 組。0.28/0.88、0.24/0.85、0.55/0.68、0.45/0.50。再生する画面は未確定
+- 通知クラスとセレクタの cstring はある。呼び出しと分数は未確定
+
 ## 未回収。画面で見る必要があるもの
 
 - 日給の `UUID.==` がどの二つのフィールドか。加算と「日給」ラベルの分岐自体は命令にある
@@ -471,7 +488,7 @@ cstring としてあるのは次だけ。
 - 重なりの 3 分岐のどれが「のシフトがあります」で、どれが移動時間の文言か。閾値 `x20` が `Workplace` のどのフィールドか
 - `WeekTemplate` の要素を日付へ展開する命令。上の 5 関数には無い
 - 置いた結果が `AppModel` のどの Published へ入るか。配置と `0x1001d1b74` は `AppModel` のアクセサを呼ばない
-- カレンダー、勤務先、給与、設定、シフト編集の子ビューの積み順。直接の `VStack` / `HStack` 呼び出しは上の表で尽きていて、これらの専用関数の中には無い。ジェスチャ、シート、遷移も未接続
+- 36 画面すべての積み順。直接の `VStack` / `HStack` は主要画面の専用関数の中に無い。画面単位の仕様と網羅率は `notes/screens/COVERAGE.md`
 - `AccentColor` と `LaunchBackground` を命令がどのビューで塗るか。名前の cstring は Mach-O に無い
 - `0x1000697b4` の Doto のサイズ。`0x1000bc508` のフォント名
 - `0x100066e2c` と `0x10008ab80` の記号名。命令が渡すバイトは UTF-8 ではなく、0x20 後ろの記号は引数にしていない
