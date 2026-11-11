@@ -17,20 +17,20 @@
 | --- | --- |
 | 確 | 82（25.3%） |
 | 部 | 48（14.8%） |
-| 観 | 48（14.8%） |
-| 未 | 146（45.1%） |
-| 確 + 部 + 観 | 178（54.9%） |
+| 観 | 58（17.9%） |
+| 未 | 136（42.0%） |
+| 確 + 部 + 観 | 188（58.0%） |
 
 観点ごとの数。
 
 | 観点 | 確 | 部 | 観 | 未 |
 | --- | --- | --- | --- | --- |
 | 入口（型と関数） | 35 | 1 | 0 | 0 |
-| 文言 | 25 | 0 | 3 | 8 |
-| SF Symbols | 2 | 1 | 10 | 23 |
-| フォントとサイズ | 3 | 0 | 11 | 22 |
+| 文言 | 25 | 0 | 4 | 7 |
+| SF Symbols | 2 | 1 | 13 | 20 |
+| フォントとサイズ | 3 | 0 | 13 | 20 |
 | 余白と角丸 | 1 | 1 | 11 | 23 |
-| 積み順 | 0 | 0 | 13 | 23 |
+| 積み順 | 0 | 0 | 17 | 19 |
 | ジェスチャとアニメーション | 5 | 15 | 0 | 16 |
 | 遷移 | 7 | 26 | 0 | 3 |
 | ロジック | 4 | 4 | 0 | 28 |
@@ -66,18 +66,18 @@
 | ShiftRequestView | 確 確 観 観 観 観 部 部 未 |
 | ShiftRequestPlannerView | 確 確 未 確 未 未 部 部 部 |
 | RequestHoursStockSheet | 確 確 未 未 未 未 部 部 未 |
-| ShiftCheckView | 確 確 未 未 未 未 部 部 未 |
+| ShiftCheckView | 確 確 観 観 未 観 部 部 未 |
 | LateMessageView | 確 確 未 未 未 未 確 確 未 |
 | LateTemplateSheet | 確 確 未 未 未 未 未 部 未 |
 | LateTemplateEditorView | 確 未 未 未 未 未 未 部 未 |
 | PayBreakdownView | 部 未 未 未 未 未 未 未 部 |
-| PayPeriodsView | 確 未 未 未 未 未 未 部 未 |
-| PayPeriodDetailView | 確 確 未 未 未 未 部 部 部 |
+| PayPeriodsView | 確 観 未 未 未 観 未 部 未 |
+| PayPeriodDetailView | 確 確 未 観 未 観 部 部 部 |
 | PayScheduleSettingView | 確 未 未 未 未 未 未 確 未 |
 | PayTermsEditorView | 確 確 未 未 未 未 未 部 部 |
 | PayScheduleEditorView | 確 確 未 未 未 未 部 部 未 |
-| UnconfirmedShiftsView | 確 確 未 未 未 未 部 部 未 |
-| ShiftEntryEditor | 確 確 未 未 未 未 未 部 確 |
+| UnconfirmedShiftsView | 確 確 観 未 未 観 部 部 未 |
+| ShiftEntryEditor | 確 確 観 未 未 未 未 部 確 |
 | TodoEditor | 確 未 未 未 未 未 未 部 未 |
 
 `PayBreakdownView` は、アクセサ `0x1001165c0` への `bl` も `adrp` + `add` も無い。積み順は 36 画面とも未。今回 確にした文言は、その画面のアクセサだけを呼ぶ関数が cstring の先頭を読むもの。画面の中の位置は見ていない。
