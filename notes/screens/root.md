@@ -60,6 +60,10 @@ descriptor `0x10043edd0`、アクセサ `0x1000a4f84`。専用関数 `0x1000a19b
 
 descriptor `0x10043f998`、アクセサ `0x10010423c`。専用関数 `0x10010ea20`。
 
-部分。`0x100107ec0` は「勤務先を登録」「いつものシフト」「お給料の決まり」を読む。専用関数ではない。`0x100104588` は `OnboardingView` と `WorkplaceImportView` を呼び、`alert` が 2、`onAppear` が 1、`presentationCornerRadius` の即値 32 がある。どちらの画面の角丸かは未確定。
+確定。`0x100106bc0` はこのアクセサだけを呼ぶ。「写真から選ぶ」は `0x1004fd610` の 18 バイトで、通常の `Button` にする。「撮影する」は `0x100106d84` の即値で、`UIImagePickerController.isSourceTypeAvailable:` に 1 を渡して 0 でないときだけボタンにする。1 はカメラの source type である。「キャンセル」は `0x100106edc` の即値で、`ButtonRole.cancel` を渡す。「写真から選ぶ」のアクション `0x100107188` はこのアクセサだけを呼び、`LazyState` へ 1 を書く。
+
+部分。`0x100107ec0` は「勤務先を登録」「いつものシフト」「お給料の決まり」を読む。専用関数ではない。`0x100104588` は `OnboardingView` と `WorkplaceImportView` を呼び、`photosPicker` と `PHPickerFilter.images`、`alert` が 2、`onAppear` が 1、`presentationCornerRadius` の即値 32 がある。ピッカーと角丸がどちらの画面かは未確定。`VNRecognizeTextRequest` の `performRequests` は `0x10024e454` にあり、画面アクセサからは届いていない。
+
+観測。初回の「勤務先を登録」で「写真から読み取る」を押すと、同じ題のダイアログに「撮影する」「写真から選ぶ」「キャンセル」が出る。説明文は、この画面の関数が読む「働いているお店の名前を入れます。住所と電話番号は、道順や遅刻の連絡に使います。」と一致する。電話番号と店名は書かない。
 
 未確定。記号、フォント、積み順、オンボーディングのページ順。

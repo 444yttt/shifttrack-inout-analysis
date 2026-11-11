@@ -666,6 +666,12 @@ def check_symbols_and_layout(data: bytes) -> None:
     check(struct.unpack_from("<I", data, 0x393F8)[0] == 0x1E655000, "calendar access design size 13")
     shown = branch_target(struct.unpack_from("<I", data, 0x38ED4)[0], 0x100038ED4)
     check(shown == 0x1004110C0, f"design size calls the scaler at {shown:#x}")
+    check(struct.unpack_from("<I", data, 0x171F0)[0] == 0x52800788, "overlap travel scale is 60")
+    check(struct.unpack_from("<I", data, 0x17234)[0] == 0xD2E809C8, "overlap divides the gap by 60.0")
+    check(struct.unpack_from("<I", data, 0x1BF330)[0] == 0xD2800240, "save-anyway label count is 18")
+    check(struct.unpack_from("<I", data, 0x1FC400)[0] == 0xD2800240, "repeat save-anyway label count is 18")
+    check(struct.unpack_from("<I", data, 0x106D84)[0] == 0xD2925CC0, "camera button starts the 撮影する immediate")
+    check(b"https://itunes.apple.com/lookup?bundleId=" in data, "version lookup URL")
     check(struct.unpack_from("<I", data, 0x1F459C)[0] == 0x1E661000, "todo editor design size 16")
     check(struct.unpack_from("<I", data, 0x1463E8)[0] == 0x1E655000, "pay periods design size 13")
     for literal in ("今月に戻ります", "年収の壁を追加", "最初の文章に戻す", "chevron.up", "今週のシフト", "勤務先の移動にかかる時間", "このシフトは確認が必要です", "と時間が重なっています", "おつかれさまでした", "税金・社会保険は計算していません。"):
