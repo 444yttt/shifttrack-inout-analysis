@@ -15,19 +15,19 @@
 
 | | 画面数 36 |
 | --- | --- |
-| 確 | 108（33.3%） |
+| 確 | 111（34.3%） |
 | 部 | 48（14.8%） |
-| 観 | 48（14.8%） |
-| 未 | 120（37.0%） |
-| 確 + 部 + 観 | 204（63.0%） |
+| 観 | 55（17.0%） |
+| 未 | 110（34.0%） |
+| 確 + 部 + 観 | 214（66.0%） |
 
 観点ごとの数。
 
 | 観点 | 確 | 部 | 観 | 未 |
 | --- | --- | --- | --- | --- |
 | 入口（型と関数） | 35 | 1 | 0 | 0 |
-| 文言 | 25 | 0 | 4 | 7 |
-| SF Symbols | 2 | 1 | 13 | 20 |
+| 文言 | 28 | 0 | 3 | 5 |
+| SF Symbols | 2 | 1 | 21 | 12 |
 | フォントとサイズ | 26 | 0 | 3 | 7 |
 | 余白と角丸 | 1 | 3 | 11 | 21 |
 | 積み順 | 0 | 0 | 17 | 19 |
@@ -49,10 +49,10 @@
 | OnboardingView | 確 確 観 確 部 観 部 部 未 |
 | WorkplaceListView | 確 確 部 確 観 観 確 部 確 |
 | WorkplaceDirectoryView | 確 確 確 確 観 観 確 部 未 |
-| WorkplaceEditorView | 確 確 未 未 未 未 未 確 未 |
+| WorkplaceEditorView | 確 確 観 未 未 未 未 確 未 |
 | WorkplaceImportView | 確 確 未 確 部 未 未 確 未 |
-| WorkplaceThumbnailView | 確 未 未 未 未 未 未 未 未 |
-| LocationPickerView | 確 確 未 確 未 未 確 部 未 |
+| WorkplaceThumbnailView | 確 未 観 未 未 未 未 未 未 |
+| LocationPickerView | 確 確 観 確 未 未 確 部 未 |
 | CalendarTabView | 確 確 観 確 観 観 確 確 確 |
 | CalendarDayView | 確 確 観 確 確 観 確 確 確 |
 | CalendarAccessView | 確 確 未 確 未 未 未 部 未 |
@@ -64,22 +64,22 @@
 | ShiftPartEditorView | 確 観 観 確 観 観 未 部 未 |
 | ShiftRepeatEditorView | 確 確 観 観 観 観 未 確 確 |
 | ShiftRequestView | 確 確 観 確 観 観 部 部 未 |
-| ShiftRequestPlannerView | 確 確 未 確 未 未 部 部 部 |
+| ShiftRequestPlannerView | 確 確 観 確 未 未 部 部 部 |
 | RequestHoursStockSheet | 確 確 未 確 未 未 部 部 未 |
 | ShiftCheckView | 確 確 観 確 未 観 部 部 未 |
 | LateMessageView | 確 確 未 確 未 未 確 確 未 |
 | LateTemplateSheet | 確 確 未 確 未 未 未 部 未 |
-| LateTemplateEditorView | 確 未 未 確 未 未 未 部 未 |
+| LateTemplateEditorView | 確 確 観 確 未 未 未 部 未 |
 | PayBreakdownView | 部 未 未 未 未 未 未 未 部 |
-| PayPeriodsView | 確 観 未 確 未 観 未 部 未 |
-| PayPeriodDetailView | 確 確 未 観 未 観 部 部 部 |
+| PayPeriodsView | 確 確 観 確 未 観 未 部 未 |
+| PayPeriodDetailView | 確 確 観 観 未 観 部 部 部 |
 | PayScheduleSettingView | 確 未 未 未 未 未 未 確 未 |
 | PayTermsEditorView | 確 確 未 確 未 未 未 部 部 |
-| PayScheduleEditorView | 確 確 未 未 未 未 部 部 未 |
+| PayScheduleEditorView | 確 確 観 未 未 未 部 部 未 |
 | UnconfirmedShiftsView | 確 確 観 確 未 観 部 部 未 |
 | ShiftEntryEditor | 確 確 観 確 部 未 未 部 確 |
-| TodoEditor | 確 未 未 確 未 未 未 部 未 |
+| TodoEditor | 確 確 未 確 未 未 未 部 未 |
 
 `PayBreakdownView` は、アクセサ `0x1001165c0` への `bl` も `adrp` + `add` も無い。積み順は 36 画面とも未。今回 確にした文言は、その画面のアクセサだけを呼ぶ関数が cstring の先頭を読むもの。画面の中の位置は見ていない。
 
-画面別の命令は `calendar.md`、`workplace.md`、`pay.md`、`shift.md`、`settings.md`、`root.md`。スクショとの突き合わせは `observed.md`。給与、重なり、`WeekTemplate`、保存先、通知は `logic.md`。opaque 型から読んだ modifier 順は `opaque.md`。
+画面別の命令は `calendar.md`、`workplace.md`、`pay.md`、`shift.md`、`settings.md`、`root.md`。スクショとの突き合わせは `observed.md`。記号・文言・フォントの今回の突き合わせは `parallel-symbols.md`。給与、重なり、`WeekTemplate`、保存先、通知は `logic.md`。opaque 型から読んだ modifier 順は `opaque.md`。
