@@ -154,6 +154,7 @@ def main() -> int:
     check_live_pay(data)
     check_pay_amount(data)
     check_pay_conditions(data)
+    check_pattern_place(data)
 
     check(re.search(rb"ca-app-pub-[0-9]{16}/[0-9]{10}", data) is None, "no ad unit id")
     check(
@@ -494,6 +495,65 @@ def check_pay_conditions(data: bytes) -> None:
         check(got == word, f"display word at {off:#x}")
 
 
+def pattern_minute_within_day(minute: int) -> int:
+    magic = int.from_bytes(bytes.fromhex("2d82d82dd82d82d3"), "big", signed=True)
+    high = (minute * magic) >> 64
+    quotient = (high >> 8) + (1 if high < 0 else 0)
+    remainder = minute - quotient * 1440
+    if remainder < 0:
+        remainder += 1440
+    return remainder
+
+
+def pattern_clock(minute: int) -> tuple[int, int]:
+    remainder = pattern_minute_within_day(minute)
+    hour = (remainder * 0x8889) >> 21
+    return hour, remainder - hour * 60
+
+
+def check_pattern_place(data: bytes) -> None:
+    for off, word in (
+        (0x3FFA8, 0xB40009A8),
+        (0x6E2EC, 0xB4000648),
+        (0x6E138, 0xB9802816),
+        (0x6E354, 0xB9803F34),
+        (0x4006C, 0xB9803113),
+        (0x1C7B64, 0xB9801B68),
+        (0x1C7E64, 0xB9801D08),
+        (0x1C7E9C, 0xB9802108),
+        (0x1C7EE8, 0x5280B409),
+        (0x1C7FD0, 0xD2800002),
+        (0x1C814C, 0x52800021),
+        (0x1C8154, 0x52800003),
+        (0x1C7BD0, 0x7100041F),
+        (0x1C85BC, 0x383B6B9F),
+        (0x1C7D44, 0xF945DD08),
+    ):
+        got = struct.unpack_from("<I", data, off)[0]
+        check(got == word, f"pattern-place word at {off:#x}")
+    for off, pc, expect, label in (
+        (0x40134, 0x100040134, 0x100014370, "day chip commit"),
+        (0x6E3C8, 0x10006E3C8, 0x100014370, "tab chip commit"),
+        (0x1464C, 0x10001464C, 0x1001C75EC, "commit places the part"),
+        (0x1C7E24, 0x1001C7E24, 0x1003FCDC4, "same part id"),
+        (0x1C7FE8, 0x1001C7FE8, 0x1003FCE9C, "start bySettingHour"),
+        (0x1C82BC, 0x1001C82BC, 0x1003FCE9C, "end bySettingHour"),
+        (0x1C815C, 0x1001C815C, 0x1003FCEB4, "end adds one day"),
+        (0x17B6C, 0x100017B6C, 0x100016734, "clash overlap"),
+    ):
+        got = branch_target(struct.unpack_from("<I", data, off)[0], pc)
+        check(got == expect, f"{label} at {got:#x}")
+    check(pattern_clock(0) == (0, 0), "midnight")
+    check(pattern_clock(60) == (1, 0), "one hour")
+    check(pattern_clock(1439) == (23, 59), "last minute")
+    check(pattern_clock(1500) == (1, 0), "past one day")
+    check(pattern_clock(-1) == (23, 59), "negative minute wraps")
+    check(not (9 * 60 >= 17 * 60), "day shift does not roll")
+    check(22 * 60 >= 5 * 60 and 10 * 60 >= 10 * 60, "overnight and equal minutes roll")
+    check(data[0x4FAE70:0x4FAE70 + len(b"inout.adsRemoved")] == b"inout.adsRemoved", "save notice key")
+    check(data[0x5001B0:0x5001B0 + len("のシフトがあります".encode())] == "のシフトがあります".encode(), "existing-shift clash phrase")
+
+
 def macos_tools() -> None:
     if not Path("/usr/bin/sw_vers").exists():
         print("macOS tools skipped (not macOS)")
@@ -550,6 +610,7 @@ def macos_tools() -> None:
             "LiveScale.swift",
             "PayAmount.swift",
             "PayConditions.swift",
+            "PatternPlace.swift",
         ):
             proc = subprocess.run([swift, str(ROOT / "tests" / name)], text=True, capture_output=True)
             print((proc.stdout or "") + (proc.stderr or ""))

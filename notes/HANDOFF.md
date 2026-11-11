@@ -96,6 +96,36 @@
 
 Timeline の `by`（30秒が2箇所、1秒が1箇所）は、このクロージャと結べていない。60秒は金額を刻む単位であり、画面の更新周期ではない。
 
+## シフトパターンを選んだ日へ置く
+
+これは元の `ShiftPart` を選んだ日へ置く経路の再構成である。元の Swift ソースではない。画面の配置は見ていない。`WeekTemplate`（`id` / `name` / `entries`、`AppData.weekTemplates`）はこのタップの命令には出てこない。曜日の繰り返しは別経路で、ここには混ぜない。
+
+保存されるパターンは `ShiftPart`（descriptor `0x10044075c`）。フィールドは `id`, `name`, `workplaceID`, `startMinute`, `endMinute`, `breakMinutes`, `defaultTodos`, `hidden`, `color`。`AppData`（`0x10043f4b0`）とその `CodingKeys`（`0x10043f4d4`）に `shiftParts` がある。配置関数の先頭 `0x1001e5634` は、渡された配列から `UUID.==` でその `ShiftPart` を探す。
+
+入口は二つ。どちらも衝突配列の要素数が 0 のときだけ確定処理 `0x100014370` を呼び、0 でないときは `PendingPlace` を状態へ書いて確定処理を呼ばない。
+
+- 日チップのボタン動作 `0x10003fe54`。`0x10003ffa8` が要素数 0 で `0x1000400dc` へ飛び、`0x100040134` が `0x100014370`。衝突があるときは `PendingPlace`（`id` は新しい UUID、`partID` は metadata +0x14、`days` は +0x18、`clashes` は +0x1c）を作り、`CalendarDayView.__pendingPlace`（metadata +0x30、`0x10004006c`）へ `LazyState` の setter で書く
+- カレンダーのパターン行 `0x10006e04c`。先に `CalendarTabView.__picked`（metadata +0x28、`0x10006e138`）を読む。`0x10006e2ec` が衝突 0 で `0x10006e3c8` の同じ確定処理へ飛ぶ。衝突があるときは `__pendingPlace`（metadata +0x3c、`0x10006e354`）へ書く
+
+`PendingPlace`（`0x10043e4d0`）は `id`, `partID`, `days`, `clashes`。これはビューの状態であり、`AppData` のフィールドではない。
+
+衝突の中身は `0x1000177dc`。選んだ日（1要素 24 バイト）ごとに、その日の `ShiftInstance` を `0x1001c88b0` から得る。`partID`（metadata +0x14）が今のパターンと `UUID.==`（`0x100017b1c`）なら、その日は重なり検査を呼ばず、衝突文字列も足さない。違う `partID` のときだけ `0x100016734` を、パターンの `workplaceID`、`startMinute`、`endMinute` で呼ぶ。戻った文字列が空でなければ、それを衝突配列に足す。`0x1001b4e08` はその重なり側が呼ぶ整形で、「のシフトがあります」（`0x1005001b0`）を読む。他の重なり文言がこの命令から読まれることは、ここでは閉じていない。
+
+確定処理 `0x100014370` は `0x10001464c` で配置 `0x1001c75ec` を呼ぶ。配置が読むものと、読まないものは次のとおり。
+
+- `workplaceID`（`ShiftPart` metadata +0x18、`0x1001c7b64`）で勤務先を探す。戻りが無い（タグ 1、`0x1001c7bd0` の `cmp #1`）ときは、日のループの前に `0x1001c7c18` で戻る。勤務先が無いと、どの日にも置かない
+- 日のループは 24 バイト刻み。その日の既存 `ShiftInstance.partID` が同じなら `0x1001c7e28` から `0x1001c80f4` へ飛び、その日は足さない。同じパターンの二枚目は作らない
+- `startMinute`（+0x1c）と `endMinute`（+0x20）を 1440 分へ折り返し、時と分に分ける。秒は 0。`bySettingHour`（`0x1003fce9c`）の追加引数に読む方針は `nextTime`、`first`、`forward`。開始は `0x1001c7fe8`、終了は `0x1001c82bc`
+- `startMinute >= endMinute`（`0x1001c80a4` の比較、`0x1001c80b0` が以上で `0x1001c810c`）のとき、終了の `bySettingHour` の前に `Calendar.Component.day`（GOT `0x10056bbb8`、`0x1001c7d44`）を 1、wrapping false で足す（`0x1001c814c` が 1、`0x1001c8154` が 0、`0x1001c815c` が `byAdding`）。同じ分も翌日である
+- `defaultTodos`（metadata +0x28）の各要素は新しい UUID を持つ `ShiftTodo` としてコピーし、`done` のバイトに 0 を書く（`0x1001c85bc`）
+- 確定処理が配置へ渡す休憩の Optional は、ペイロード 0、タグ 1 で空である（`0x100014618` から `0x100014630`）。配置自身は `ShiftPart.breakMinutes`（metadata +0x24）を読まない。`0x1001de8dc` が書く `Meta.breakMinutes` は、この空の Optional である。休憩規則の選択 `0x1000e967c` はこのタップから呼ばれない
+
+したがって、パターンに保存された `breakMinutes` を新しいシフトへ写す命令は、この経路では見つかっていない。製品側で法定休憩や「パターンの休憩をそのまま写す」を、この関数の代わりに置かない。
+
+確定処理の成功側が読む文言は `inout.adsRemoved`（`0x1004fae70`、命令は `0x100014668`）。「保存しました」（`0x1004fae90`）は隣の文字列で、この命令の参照先ではない。認可が通らない側 `0x100014824` が読むアドレスは `0x1004faee0` で、cstring「保存できませんでした。もう一度お試しください。」の後半「もう一度お試しください。」に当たる。画面でその文が見えることは確認していない。
+
+分の折り返しと、`start >= end` で終了を翌日にする比較は `tests/PatternPlace.swift` と `tools/verify_macos.py` にある。
+
 ## 未回収。画面で見る必要があるもの
 
 - 日給の `UUID.==` がどの二つのフィールドか。加算と「日給」ラベルの分岐自体は命令にある
@@ -108,3 +138,7 @@ Timeline の `by`（30秒が2箇所、1秒が1箇所）は、このクロージ�
 - 日をまたぐ丸め。この経路は各日付の startOfDay からの秒で、1440 分では巻かない。深夜の startOfDay をまたぐ見た目は未観察
 - 年収の壁の閾値比較。週オフセットを ±1 する側
 - 30 秒と 1 秒のどちらが勤務中の金額表示を更新するか
+- パターンの `breakMinutes` を、選んだ日へ置いたシフトの `breakMinutes` へ写す命令。上のタップは `ShiftPart` のそのフィールドを読まず、カレンダー側 `Meta.breakMinutes` には空を渡す
+- 重なり検査 `0x100016734` が「のシフトがあります」以外の文言を、どの条件で足すか。移動時間の不足と時刻の重なりの式は閉じていない
+- `WeekTemplate` を一日または一週間へ展開する命令。このタップの対象は `ShiftPart` である
+- 置いた結果が `AppModel` のどの Published へ入るか。配置関数は `ShiftInstance` のアクセサを、既存の `partID` を読む以外には呼んでいない

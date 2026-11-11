@@ -480,4 +480,28 @@ extension InOutRecovered {
         }
         return transport + Double(amount)
     }
+
+    /// 0x1001c75ec. The pattern minute is reduced with the same signed
+    /// division the instruction uses (magic 0x2d82d82dd82d82d3, then 1440),
+    /// and a negative remainder is wrapped forward by 1440. Hour is that
+    /// remainder times 0x8889, shifted right 21. This is the input to
+    /// `bySettingHour` (second 0). It is not a wage formula.
+    static func clockFromPatternMinute(_ minute: Int) -> (hour: Int, minute: Int) {
+        let magic = Int(bitPattern: 0x2D82_D82D_D82D_82D3)
+        let (high, _) = minute.multipliedFullWidth(by: magic)
+        let quotient = (high >> 8) &+ (high < 0 ? 1 : 0)
+        var remainder = minute &- quotient &* 1440
+        if remainder < 0 {
+            remainder &+= 1440
+        }
+        let hour = (remainder * 0x8889) >> 21
+        return (hour, remainder - hour * 60)
+    }
+
+    /// 0x1001c80a4 compares the pattern start minute with the end minute.
+    /// `start >= end` takes `date(byAdding: .day, value: 1, wrappingComponents: false)`
+    /// before the end `bySettingHour`. Equal minutes are included.
+    static func patternEndAddsOneDay(startMinute: Int, endMinute: Int) -> Bool {
+        startMinute >= endMinute
+    }
 }
