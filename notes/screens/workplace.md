@@ -14,7 +14,9 @@ descriptor `0x100440e64`、アクセサ `0x100255730`。専用関数 `0x10025ca2
 
 確定。`Image(systemName:)` の `plus` は `0x10026fae8`、`pencil` は `0x10026905c`、`ellipsis` は `0x100269c24`、`chevron.right` は `0x10026dfc0`。`0x100264c30` は `ShiftTodo.done` が 0 のとき `circle`、0 でないとき 21 バイトの「この日のシフト」を渡す。後者は SF Symbol の名前ではない。これらの関数は、呼び出し元を辿ると一覧のアクセサだけに届く。画面の中の位置は未確定。
 
-未確定。カードの積み順、余白、角丸、色。`Color(UIColor)` の 5 つの短い関数は画面へ結べていない。
+確定。このアクセサだけを参照する関数が `EdgeInsets.init(_all:)` を呼ぶ。`d0` は 4、6、8、12、16、20、24 と、負の -8、`-6`、`-4` がある。20 は `0x100257258`、`-8` は `0x1002622ec`。画面の中の位置は未確定。
+
+未確定。カードの積み順、角丸、色。`Color(UIColor)` の 5 つの短い関数は画面へ結べていない。
 
 ## WorkplaceDirectoryView
 
@@ -24,7 +26,9 @@ descriptor `0x100440b40`、アクセサ `0x10021c788`。専用関数 `0x10021dc9
 
 部分。`0x10021cae0` はディレクトリと一緒に `WorkplaceEditorView`、`ShiftPartEditorView`、`OnboardingView`、`LateMessageView` を呼ぶ。`sheet` が 1、`sheet(item:)` が 4。
 
-未確定。積み順、余白、記号。
+確定。このアクセサだけを参照する関数が `EdgeInsets.init(_all:)` に 4、8、12、16、20、24 を渡す。20 は `0x10021dc08`。画面の中の位置は未確定。
+
+未確定。積み順、記号。
 
 ## WorkplaceEditorView
 
@@ -46,7 +50,7 @@ descriptor `0x100440cd8`、アクセサ `0x100249690`。専用関数 `0x100243ca
 
 部分。`0x10023dffc` と `0x10022b078` は `fullScreenCover(isPresented:)`、`onChange`、`sheet(item:)` を持ち、インポートのアクセサを呼ぶ。エディタ側の関数と重なる。
 
-部分。`0x100104588` はオンボーディングとこの画面を呼び、`presentationCornerRadius` に 32 を渡す。どちらの画面の角丸かは未確定。
+部分。`0x100104588` はオンボーディングとこの画面を呼び、`presentationCornerRadius` に 32 を渡す。同じ関数は `EdgeInsets.init(_all:)` に 20（`0x100104a74`）と 12（`0x100104ac0`）を渡す。角丸と余白がどちらの画面かは未確定。
 
 確定。`reverseGeocodeLocation:completionHandler:` は `0x10009a79c`、`0x10009a9dc`、`0x10009ae84` の 3 箇所。それぞれの関数から呼び出し元を辿ると、`WorkplaceImportView` のアクセサだけに届く。渡している座標のフィールド名は、この 3 箇所では閉じていない。
 
@@ -60,7 +64,9 @@ descriptor `0x100440bb8`、アクセサ `0x10023c87c`。専用関数 `0x100237b9
 
 部分。`0x100235010` は `WorkplaceEditorView` と一緒に `NavigationLink` でこの画面を出す。`0x100235d74` はエディタだけを呼び、`ScrollViewProxy.scrollTo` がある。地図側のスクロールではない。
 
-未確定。文言、記号、フォント、余白、積み順。
+確定。`0x100236f50` はこのアクセサだけを参照し、`0x1002371a8` の `fmov d0, #16` の直後に `EdgeInsets.init(_all:)` を呼ぶ。画面の中の位置は未確定。
+
+未確定。文言、記号、フォント、積み順。
 
 ## WorkplaceThumbnailView
 

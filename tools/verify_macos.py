@@ -688,6 +688,35 @@ def check_symbols_and_layout(data: bytes) -> None:
     check(struct.unpack_from("<I", data, 0x106D84)[0] == 0xD2925CC0, "camera button starts the 撮影する immediate")
     check(b"https://itunes.apple.com/lookup?bundleId=" in data, "version lookup URL")
     check(struct.unpack_from("<I", data, 0x1F459C)[0] == 0x1E661000, "todo editor design size 16")
+    insets = (
+        (0x17BFB4, 0x1E661000, "root all-edge inset 16"),
+        (0x24274, 0x1E621000, "tab all-edge inset 4"),
+        (0x10640C, 0x1E661000, "onboarding all-edge inset 16"),
+        (0x257258, 0x1E669000, "workplace list all-edge inset 20"),
+        (0x2622EC, 0x1E741000, "workplace list all-edge inset -8"),
+        (0x21DC08, 0x1E669000, "directory all-edge inset 20"),
+        (0x2371A8, 0x1E661000, "location picker all-edge inset 16"),
+        (0x5A4A8, 0x1E661000, "calendar all-edge inset 16"),
+        (0x3E428, 0x1E669000, "day all-edge inset 20"),
+        (0x38DE8, 0x1E671000, "calendar access all-edge inset 24"),
+        (0xB359C, 0x1E671000, "income all-edge inset 24"),
+        (0xBD640, 0x1E659000, "wall all-edge inset 14"),
+        (0x18DC14, 0x1E671000, "settings all-edge inset 24"),
+        (0xA219C, 0x1E669000, "guide all-edge inset 20"),
+        (0x1F1850, 0x1E621000, "part editor all-edge inset 4"),
+        (0x215518, 0x1E649000, "request all-edge inset 10"),
+        (0x201920, 0x1E661000, "planner all-edge inset 16"),
+        (0x1A7C2C, 0x1E669000, "check all-edge inset 20"),
+        (0xCE420, 0x1E649000, "late template sheet all-edge inset 10"),
+        (0x1BE250, 0x1E621000, "entry all-edge inset 4"),
+        (0x1F28D0, 0x1E651000, "todo all-edge inset 12"),
+        (0x200820, 0x1E669000, "shared hours all-edge inset 20"),
+        (0x104A74, 0x1E669000, "shared import all-edge inset 20"),
+    )
+    for off, word, msg in insets:
+        check(struct.unpack_from("<I", data, off)[0] == word, msg)
+        shown = branch_target(struct.unpack_from("<I", data, off + 4)[0], BASE + off + 4)
+        check(shown == 0x1003FD1FC, f"{msg} calls EdgeInsets")
     check(struct.unpack_from("<I", data, 0x1463E8)[0] == 0x1E655000, "pay periods design size 13")
     for literal in ("今月に戻ります", "年収の壁を追加", "最初の文章に戻す", "chevron.up", "今週のシフト", "勤務先の移動にかかる時間", "このシフトは確認が必要です", "と時間が重なっています", "おつかれさまでした", "税金・社会保険は計算していません。"):
         check(literal.encode() in data, f"copy literal {literal}")
