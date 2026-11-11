@@ -15,11 +15,11 @@
 
 | | 画面数 36 |
 | --- | --- |
-| 確 | 109（33.6%） |
-| 部 | 48（14.8%） |
-| 観 | 63（19.4%） |
-| 未 | 104（32.1%） |
-| 確 + 部 + 観 | 220（67.9%） |
+| 確 | 115（35.5%） |
+| 部 | 47（14.5%） |
+| 観 | 62（19.1%） |
+| 未 | 100（30.9%） |
+| 確 + 部 + 観 | 224（69.1%） |
 
 観点ごとの数。
 
@@ -29,13 +29,13 @@
 | 文言 | 25 | 0 | 4 | 7 |
 | SF Symbols | 2 | 1 | 13 | 20 |
 | フォントとサイズ | 26 | 0 | 3 | 7 |
-| 余白と角丸 | 2 | 3 | 20 | 11 |
-| 積み順 | 0 | 0 | 23 | 13 |
+| 余白と角丸 | 6 | 2 | 19 | 9 |
+| 積み順 | 2 | 0 | 23 | 11 |
 | ジェスチャとアニメーション | 7 | 13 | 0 | 16 |
 | 遷移 | 7 | 26 | 0 | 3 |
 | ロジック | 5 | 4 | 0 | 27 |
 
-積み順の `確` は 0 のままである。スクショで上から下の順が見えた画面は `観`。`CalendarTabView` だけの関数にある `LazyVStack` の間隔 8 と `LazyVGrid` の間隔 6 は余白の確で、二つの呼び出しは分岐の両側にある。子の並びは取れていない。命令の `VStack` はバイナリ全体で 5 のまま。詳細は `parallel-layout.md`。
+積み順の `確` は、遅刻の作成の 4 節と、取り込みの 2 節である。どちらもその画面だけの関数が `Section.create` をその順で呼ぶ。スクショで上から下の順が見えた画面は `観`。余白の確は、カレンダーの間隔 6 と 8 に加え、ルート、設定、シフト編集、Todo の `EdgeInsets` である。子ビューの名前が残っていない節は、節の順だけを確にしている。命令の `VStack` はバイナリ全体で 5 のまま。詳細は `parallel-layout.md`。
 
 ## 画面ごとの印
 
@@ -43,14 +43,14 @@
 
 | 画面 | 印 |
 | --- | --- |
-| RootView | 確 確 未 確 未 未 部 部 未 |
+| RootView | 確 確 未 確 確 未 部 部 未 |
 | InOutTabBar | 確 観 確 観 観 観 部 未 未 |
 | LaunchAnimationView | 確 未 未 未 観 未 部 部 未 |
 | OnboardingView | 確 確 観 確 部 観 部 部 未 |
 | WorkplaceListView | 確 確 部 確 観 観 確 部 確 |
 | WorkplaceDirectoryView | 確 確 確 確 観 観 確 部 未 |
 | WorkplaceEditorView | 確 確 未 未 観 観 未 確 未 |
-| WorkplaceImportView | 確 確 未 確 部 未 未 確 未 |
+| WorkplaceImportView | 確 確 未 確 部 確 未 確 未 |
 | WorkplaceThumbnailView | 確 未 未 未 未 未 未 未 未 |
 | LocationPickerView | 確 確 未 確 観 観 確 部 未 |
 | CalendarTabView | 確 確 観 確 確 観 確 確 確 |
@@ -58,7 +58,7 @@
 | CalendarAccessView | 確 確 未 確 観 観 未 部 未 |
 | IncomeView | 確 確 観 確 観 観 部 部 未 |
 | WallEditorView | 確 確 観 確 観 観 未 部 未 |
-| SettingsView | 確 確 観 確 観 観 部 部 未 |
+| SettingsView | 確 確 観 確 確 観 部 部 未 |
 | AboutView | 確 未 未 未 未 未 未 部 未 |
 | GuideOverlay | 確 観 観 確 観 観 確 部 未 |
 | ShiftPartEditorView | 確 観 観 確 観 観 未 部 未 |
@@ -67,7 +67,7 @@
 | ShiftRequestPlannerView | 確 確 未 確 観 観 部 部 部 |
 | RequestHoursStockSheet | 確 確 未 確 未 未 部 部 未 |
 | ShiftCheckView | 確 確 観 確 観 観 部 部 未 |
-| LateMessageView | 確 確 未 確 未 未 確 確 未 |
+| LateMessageView | 確 確 未 確 未 確 確 確 未 |
 | LateTemplateSheet | 確 確 未 確 未 未 未 部 未 |
 | LateTemplateEditorView | 確 未 未 確 観 観 未 部 未 |
 | PayBreakdownView | 部 未 未 未 未 未 未 未 部 |
@@ -77,8 +77,8 @@
 | PayTermsEditorView | 確 確 未 確 未 未 未 部 部 |
 | PayScheduleEditorView | 確 確 未 未 観 観 部 部 未 |
 | UnconfirmedShiftsView | 確 確 観 確 未 観 部 部 未 |
-| ShiftEntryEditor | 確 確 観 確 部 未 未 部 確 |
-| TodoEditor | 確 未 未 確 未 未 未 部 未 |
+| ShiftEntryEditor | 確 確 観 確 確 未 未 部 確 |
+| TodoEditor | 確 未 未 確 確 未 未 部 未 |
 
 `PayBreakdownView` は、アクセサ `0x1001165c0` への `bl` も `adrp` + `add` も無い。今回 確にした文言は、その画面のアクセサだけを呼ぶ関数が cstring の先頭を読むもの。画面の中の位置は見ていない。
 
