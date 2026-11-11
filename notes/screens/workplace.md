@@ -28,7 +28,7 @@ descriptor `0x100440b40`、アクセサ `0x10021c788`。専用関数 `0x10021dc9
 
 descriptor `0x100440b90`、アクセサ `0x10022ce3c`。専用関数 `0x10022e830`（8772 バイト）。
 
-確定。この関数は「遅刻連絡の文章の型」「住所・位置（任意）」「この勤務先を削除」を読む。`0x10022dc40` はこのアクセサだけを呼び、`NavigationStack` を作る。
+確定。この関数は「遅刻連絡の文章の型」「住所・位置（任意）」「この勤務先を削除」を読む。`0x10022dc40` はこのアクセサだけを呼び、`NavigationStack` を作る。`0x100236114` もこのアクセサだけを呼ぶ。名前を空白で削り、空なら「勤務先の名前を入力してください。」へ進む。続く分岐で「時給の適用開始日が重複しています。日付を変更してください。」「お給料の決まりの適用開始日が重複しています。日付を変更してください。」「時給を0円以上で入力してください。」を読む。
 
 部分。`0x10022e0d0` はエディタと `WorkplaceImportView` を呼び、`toolbar` がある。`0x100230fa8` はエディタと `PayTermsEditorView`、`0x100230a74` は `PayScheduleEditorView`、`0x100233194` は `LateTemplateEditorView`、`0x100235010` は `LocationPickerView` を、それぞれ `NavigationLink` で結ぶ関数から呼ぶ。リンクのラベルは未確定。
 
@@ -52,7 +52,7 @@ descriptor `0x100440cd8`、アクセサ `0x100249690`。専用関数 `0x100243ca
 
 descriptor `0x100440bb8`、アクセサ `0x10023c87c`。専用関数 `0x100237b98`。
 
-確定。`0x100237320` はこのアクセサだけを呼び、`onTapGesture(count:coordinateSpace:perform:)` がある。
+確定。`0x100237320` はこのアクセサだけを呼び、`onTapGesture(count:coordinateSpace:perform:)` がある。`0x100238b4c` もこのアクセサだけを呼ぶ。`x8` が 0 でないとき、`0x1000d8454` へ尾呼び出しする。その先の `0x1000d853c` が `requestWhenInUseAuthorization` を呼ぶ。画面アクセサを持たない `0x100218c0c` も同じ尾呼び出しをする。
 
 部分。`0x100235010` は `WorkplaceEditorView` と一緒に `NavigationLink` でこの画面を出す。`0x100235d74` はエディタだけを呼び、`ScrollViewProxy.scrollTo` がある。地図側のスクロールではない。
 

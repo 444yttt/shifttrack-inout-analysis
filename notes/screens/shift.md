@@ -24,7 +24,7 @@ descriptor `0x100440968`、アクセサ `0x1001fc9bc`。専用関数 `0x1001fa34
 
 descriptor `0x100440a58`、アクセサ `0x100213818`。専用関数 `0x1002145c8`。
 
-確定。この関数は「ストックして入れる」「例：家の用事で」を読む。
+確定。この関数は「ストックして入れる」「例：家の用事で」を読む。`0x100215f10` もこのアクセサだけを呼ぶ。1 文字の「月」（`0x1002161d0` の即値）を作り、`0x100216974` を `w0 = 0` と `w0 = 1` で 2 回呼ぶ。二つの戻りを、テンプレの二つの欄へ渡す側である。どちらの整数が出勤希望で、どちらが休み希望かは、この 2 回の並びだけでは閉じていない。
 
 部分。`0x1001ff66c` は `ShiftRequestView`、`ShiftRequestPlannerView`、`RequestHoursStockSheet` を呼び、`sheet` が 2、`confirmationDialog` が 1、`DragGesture` の `d0` が 30、`onChange` がある。
 
@@ -58,6 +58,6 @@ descriptor `0x1004404dc`、アクセサ `0x1001a3730`。専用関数 `0x1001a6ab
 
 型名の cstring は `0x100436290` と `0x100437d18`。アクセサはこの走査では結んでいない。
 
-部分。編集分数 `0x1001b8770` は `_endMinute - _startMinute` を 1...1440 に正規化する。同じ分は 1440。これは給与明細の分数ではない。`ShiftTodo.done == 0` の 3 箇所は `circle`、`done != 0` は 21 バイトの「この日のシフト」を `Image(systemName:)` に渡す。SF Symbol の名前ではない。`0x10003cdd8` は日ビューとこのエディタを両方呼び、`presentationCornerRadius` に 32 を渡す。角丸がどちらの画面のものであるかは、この関数だけでは決まらない。`0x1001b9fe4` はこのアクセサだけを呼び、重なり `0x100016734` を呼ぶ。
+部分。編集分数 `0x1001b8770` は `_endMinute - _startMinute` を 1...1440 に正規化する。同じ分は 1440。これは給与明細の分数ではない。`ShiftTodo.done == 0` の 3 箇所は `circle`、`done != 0` は 21 バイトの「この日のシフト」を `Image(systemName:)` に渡す。SF Symbol の名前ではない。`0x10003cdd8` は日ビューとこのエディタを両方呼び、`DragGesture`、`onEnded`、`simultaneousGesture`、`presentationCornerRadius` 32 がある。ドラッグと角丸がどちらの画面のものであるかは、この関数だけでは決まらない。`0x1001b9fe4` はこのアクセサだけを呼び、重なり `0x100016734` を呼ぶ。
 
 未確定。エディタの積み順、余白、フォント、遷移、`done` の表示がこの文字列のまま画面へ出るか。

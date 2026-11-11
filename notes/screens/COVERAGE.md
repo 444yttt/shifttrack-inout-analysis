@@ -15,11 +15,11 @@
 
 | | 画面数 36 |
 | --- | --- |
-| 確 | 109（33.6%） |
-| 部 | 48（14.8%） |
+| 確 | 113（34.9%） |
+| 部 | 49（15.1%） |
 | 観 | 48（14.8%） |
-| 未 | 119（36.7%） |
-| 確 + 部 + 観 | 205（63.3%） |
+| 未 | 114（35.2%） |
+| 確 + 部 + 観 | 210（64.8%） |
 
 観点ごとの数。
 
@@ -31,9 +31,9 @@
 | フォントとサイズ | 26 | 0 | 3 | 7 |
 | 余白と角丸 | 1 | 3 | 11 | 21 |
 | 積み順 | 0 | 0 | 17 | 19 |
-| ジェスチャとアニメーション | 7 | 13 | 0 | 16 |
+| ジェスチャとアニメーション | 8 | 14 | 0 | 14 |
 | 遷移 | 7 | 26 | 0 | 3 |
-| ロジック | 6 | 4 | 0 | 26 |
+| ロジック | 9 | 4 | 0 | 23 |
 
 積み順の `確` は 0 のままである。スクショで上から下の順が見えた画面だけ `観` にした。命令の `VStack` はバイナリ全体で 5 のまま。詳細は `observed.md`。
 
@@ -45,17 +45,17 @@
 | --- | --- |
 | RootView | 確 確 未 確 未 未 部 部 未 |
 | InOutTabBar | 確 観 確 観 観 観 部 未 未 |
-| LaunchAnimationView | 確 未 未 未 未 未 部 部 未 |
+| LaunchAnimationView | 確 未 未 未 未 未 確 部 未 |
 | OnboardingView | 確 確 観 確 部 観 部 部 確 |
 | WorkplaceListView | 確 確 部 確 観 観 確 部 確 |
 | WorkplaceDirectoryView | 確 確 確 確 観 観 確 部 未 |
-| WorkplaceEditorView | 確 確 未 未 未 未 未 確 未 |
+| WorkplaceEditorView | 確 確 未 未 未 未 未 確 確 |
 | WorkplaceImportView | 確 確 未 確 部 未 未 確 未 |
 | WorkplaceThumbnailView | 確 未 未 未 未 未 未 未 未 |
-| LocationPickerView | 確 確 未 確 未 未 確 部 未 |
+| LocationPickerView | 確 確 未 確 未 未 確 部 確 |
 | CalendarTabView | 確 確 観 確 観 観 確 確 確 |
 | CalendarDayView | 確 確 観 確 確 観 確 確 確 |
-| CalendarAccessView | 確 確 未 確 未 未 未 部 未 |
+| CalendarAccessView | 確 確 未 確 未 未 部 部 未 |
 | IncomeView | 確 確 観 確 観 観 部 部 未 |
 | WallEditorView | 確 確 観 確 観 観 未 部 未 |
 | SettingsView | 確 確 観 確 観 観 部 部 未 |
@@ -63,7 +63,7 @@
 | GuideOverlay | 確 観 観 確 観 観 確 部 未 |
 | ShiftPartEditorView | 確 観 観 確 観 観 未 部 未 |
 | ShiftRepeatEditorView | 確 確 観 観 観 観 未 確 確 |
-| ShiftRequestView | 確 確 観 確 観 観 部 部 未 |
+| ShiftRequestView | 確 確 観 確 観 観 部 部 確 |
 | ShiftRequestPlannerView | 確 確 未 確 未 未 部 部 部 |
 | RequestHoursStockSheet | 確 確 未 確 未 未 部 部 未 |
 | ShiftCheckView | 確 確 観 確 未 観 部 部 未 |
@@ -77,7 +77,7 @@
 | PayTermsEditorView | 確 確 未 確 未 未 未 部 部 |
 | PayScheduleEditorView | 確 確 未 未 未 未 部 部 未 |
 | UnconfirmedShiftsView | 確 確 観 確 未 観 部 部 未 |
-| ShiftEntryEditor | 確 確 観 確 部 未 未 部 確 |
+| ShiftEntryEditor | 確 確 観 確 部 未 部 部 確 |
 | TodoEditor | 確 未 未 確 未 未 未 部 未 |
 
 `PayBreakdownView` は、アクセサ `0x1001165c0` への `bl` も `adrp` + `add` も無い。積み順は 36 画面とも未。今回 確にした文言は、その画面のアクセサだけを呼ぶ関数が cstring の先頭を読むもの。画面の中の位置は見ていない。
