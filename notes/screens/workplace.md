@@ -38,7 +38,9 @@ descriptor `0x100440b90`、アクセサ `0x10022ce3c`。専用関数 `0x10022e83
 
 部分。`0x10022e0d0` はエディタと `WorkplaceImportView` を呼び、`toolbar` がある。`0x100230fa8` はエディタと `PayTermsEditorView`、`0x100230a74` は `PayScheduleEditorView`、`0x100233194` は `LateTemplateEditorView`、`0x100235010` は `LocationPickerView` を、それぞれ `NavigationLink` で結ぶ関数から呼ぶ。リンクのラベルは未確定。
 
-未確定。積み順、余白、角丸、フォント、記号、削除の確認、保存先。
+`0x100234cc4` は、このアクセサだけへ届く関数の中にあり、`Font.system` を呼ぶ。サイズの即値は無い。
+
+未確定。積み順、余白、角丸、フォントのサイズ、記号、削除の確認、保存先。
 
 ## WorkplaceImportView
 

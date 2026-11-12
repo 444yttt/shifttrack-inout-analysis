@@ -688,6 +688,21 @@ def check_symbols_and_layout(data: bytes) -> None:
     check(struct.unpack_from("<I", data, 0x106D84)[0] == 0xD2925CC0, "camera button starts the 撮影する immediate")
     check(b"https://itunes.apple.com/lookup?bundleId=" in data, "version lookup URL")
     check(struct.unpack_from("<I", data, 0x1F459C)[0] == 0x1E661000, "todo editor design size 16")
+    about_link = "GRAFF. のアプリをすべて見る".encode()
+    check(data[0x4FAC90:0x4FAC90 + len(about_link)] == about_link, "about link copy")
+    check(struct.unpack_from("<I", data, 0x6860)[0] == 0x91324108, "about link address add")
+    help_prefix = "{宛名} は宛名、{理由}".encode()
+    check(data[0x4FCFC0:0x4FCFC0 + len(help_prefix)] == help_prefix, "late template help prefix")
+    check(struct.unpack_from("<I", data, 0xCC6B8)[0] == 0x913F0108, "late template help address add")
+    check(data[0x5AD980:0x5AD988] == "{宛名}".encode(), "placeholder 宛名")
+    check(data[0x5AD990:0x5AD998] == "{理由}".encode(), "placeholder 理由")
+    check(data[0x5AD9A0:0x5AD9A8] == "{遅れ}".encode(), "placeholder 遅れ")
+    check(struct.unpack_from("<I", data, 0xD325C)[0] == 0x91260129, "late loads 宛名")
+    shown = branch_target(struct.unpack_from("<I", data, 0xD327C)[0], 0x1000D327C)
+    check(shown == 0x1003FEDBC, f"late contains the placeholder at {shown:#x}")
+    check(struct.unpack_from("<I", data, 0x14D080)[0] == 0x91240108, "pay setting loads 支給の見込み")
+    check(struct.unpack_from("<I", data, 0x1F3110)[0] == 0x91188108, "todo loads やることを追加")
+    check(struct.unpack_from("<I", data, 0x14636C)[0] == 0x913B4108, "periods loads the empty workplace line")
     insets = (
         (0x17BFB4, 0x1E661000, "root all-edge inset 16"),
         (0x24274, 0x1E621000, "tab all-edge inset 4"),

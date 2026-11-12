@@ -15,25 +15,25 @@
 
 | | 画面数 36 |
 | --- | --- |
-| 確 | 149（46.0%） |
-| 部 | 44（13.6%） |
-| 観 | 33（10.2%） |
-| 未 | 98（30.2%） |
-| 確 + 部 + 観 | 226（69.8%） |
+| 確 | 155（47.8%） |
+| 部 | 43（13.3%） |
+| 観 | 32（9.9%） |
+| 未 | 94（29.0%） |
+| 確 + 部 + 観 | 230（71.0%） |
 
 観点ごとの数。
 
 | 観点 | 確 | 部 | 観 | 未 |
 | --- | --- | --- | --- | --- |
 | 入口（型と関数） | 35 | 1 | 0 | 0 |
-| 文言 | 25 | 0 | 4 | 7 |
+| 文言 | 30 | 0 | 3 | 3 |
 | SF Symbols | 12 | 0 | 8 | 16 |
 | フォントとサイズ | 26 | 0 | 3 | 7 |
 | 余白と角丸 | 20 | 2 | 1 | 13 |
 | 積み順 | 0 | 0 | 17 | 19 |
 | ジェスチャとアニメーション | 13 | 9 | 0 | 14 |
 | 遷移 | 7 | 26 | 0 | 3 |
-| ロジック | 11 | 6 | 0 | 19 |
+| ロジック | 12 | 5 | 0 | 19 |
 
 積み順の `確` は 0 のままである。スクショで上から下の順が見えた画面だけ `観` にした。命令の `VStack` はバイナリ全体で 5 のまま、その 5 関数は一つの画面へ届かない。`Section` を呼ぶ関数が文字列を読む順は、子ビューの順としては置いていない。詳細は `observed.md`。
 
@@ -59,7 +59,7 @@
 | IncomeView | 確 確 確 確 確 観 部 部 未 |
 | WallEditorView | 確 確 観 確 確 観 未 部 未 |
 | SettingsView | 確 確 確 確 確 観 部 部 確 |
-| AboutView | 確 未 確 未 未 未 未 部 未 |
+| AboutView | 確 確 確 未 未 未 未 部 未 |
 | GuideOverlay | 確 観 観 確 確 観 確 部 未 |
 | ShiftPartEditorView | 確 観 観 確 確 観 未 部 未 |
 | ShiftRepeatEditorView | 確 確 観 観 観 観 未 確 確 |
@@ -67,18 +67,18 @@
 | ShiftRequestPlannerView | 確 確 確 確 確 未 確 部 部 |
 | RequestHoursStockSheet | 確 確 確 確 部 未 部 部 未 |
 | ShiftCheckView | 確 確 確 確 確 観 確 部 未 |
-| LateMessageView | 確 確 未 確 未 未 確 確 部 |
+| LateMessageView | 確 確 未 確 未 未 確 確 確 |
 | LateTemplateSheet | 確 確 未 確 確 未 未 部 未 |
-| LateTemplateEditorView | 確 未 未 確 未 未 未 部 未 |
+| LateTemplateEditorView | 確 確 未 確 未 未 未 部 未 |
 | PayBreakdownView | 部 未 未 未 未 未 未 未 部 |
-| PayPeriodsView | 確 観 未 確 未 観 未 部 未 |
+| PayPeriodsView | 確 確 未 確 未 観 未 部 未 |
 | PayPeriodDetailView | 確 確 未 観 未 観 部 部 部 |
-| PayScheduleSettingView | 確 未 未 未 未 未 未 確 未 |
+| PayScheduleSettingView | 確 確 未 未 未 未 未 確 未 |
 | PayTermsEditorView | 確 確 未 確 未 未 未 部 部 |
 | PayScheduleEditorView | 確 確 未 未 未 未 部 部 未 |
 | UnconfirmedShiftsView | 確 確 観 確 未 観 部 部 未 |
 | ShiftEntryEditor | 確 確 観 確 確 未 部 部 確 |
-| TodoEditor | 確 未 確 確 確 未 未 部 未 |
+| TodoEditor | 確 確 確 確 確 未 未 部 未 |
 
 `PayBreakdownView` は、アクセサ `0x1001165c0` への `bl` も `adrp` + `add` も無い。積み順の `確` は 0 のまま。記号で `確` にした名前は、`Image(systemName:)` の関数から画面アクセサまで、呼び出し元が一つずつしか無い経路で届くもの。画面の中の位置は見ていない。
 
