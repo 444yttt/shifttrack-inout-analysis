@@ -1,0 +1,323 @@
+{
+  "facets": [
+    "AbukuCameraIcon",
+    "AccentColor",
+    "AppIcon",
+    "GraffLogo",
+    "LaunchBackground",
+    "LifeClctIcon",
+    "LifeCtrlIcon",
+    "Logo",
+    "PickPicIcon",
+    "SetupCalendar",
+    "SetupPay",
+    "SetupShift",
+    "SetupWorkplace",
+    "SourceBrowserIcon",
+    "TimeDay",
+    "TimeMorning",
+    "TimeNight"
+  ],
+  "appearances": {
+    "0": "UIAppearanceAny",
+    "1": "UIAppearanceDark"
+  },
+  "renditions": [
+    {
+      "name": "icon.png",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 1024,
+      "height": 1024,
+      "scaleFactor": 100,
+      "pixelFormat": "ARGB",
+      "idiom": 0,
+      "identifier": 51715,
+      "color": null
+    },
+    {
+      "name": "SetupCalendar.jpg",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 0,
+      "height": 0,
+      "scaleFactor": 100,
+      "pixelFormat": "JPEG",
+      "idiom": 0,
+      "identifier": 23581,
+      "color": null,
+      "jpegWidth": 1200,
+      "jpegHeight": 800
+    },
+    {
+      "name": "icon.png",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 180,
+      "height": 180,
+      "scaleFactor": 100,
+      "pixelFormat": "ARGB",
+      "idiom": 0,
+      "identifier": 23859,
+      "color": null
+    },
+    {
+      "name": "SetupWorkplace.jpg",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 0,
+      "height": 0,
+      "scaleFactor": 100,
+      "pixelFormat": "JPEG",
+      "idiom": 0,
+      "identifier": 7256,
+      "color": null,
+      "jpegWidth": 1200,
+      "jpegHeight": 800
+    },
+    {
+      "name": "SetupPay.jpg",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 0,
+      "height": 0,
+      "scaleFactor": 100,
+      "pixelFormat": "JPEG",
+      "idiom": 0,
+      "identifier": 28510,
+      "color": null,
+      "jpegWidth": 1200,
+      "jpegHeight": 800
+    },
+    {
+      "name": "TimeMorning.jpg",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 0,
+      "height": 0,
+      "scaleFactor": 100,
+      "pixelFormat": "JPEG",
+      "idiom": 0,
+      "identifier": 32636,
+      "color": null,
+      "jpegWidth": 1400,
+      "jpegHeight": 583
+    },
+    {
+      "name": "Logo.png",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 1173,
+      "height": 1138,
+      "scaleFactor": 100,
+      "pixelFormat": "GA8 ",
+      "idiom": 0,
+      "identifier": 7295,
+      "color": null
+    },
+    {
+      "name": "TimeNight.jpg",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 0,
+      "height": 0,
+      "scaleFactor": 100,
+      "pixelFormat": "JPEG",
+      "idiom": 0,
+      "identifier": 26251,
+      "color": null,
+      "jpegWidth": 1400,
+      "jpegHeight": 582
+    },
+    {
+      "name": "SetupShift.jpg",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 0,
+      "height": 0,
+      "scaleFactor": 100,
+      "pixelFormat": "JPEG",
+      "idiom": 0,
+      "identifier": 20123,
+      "color": null,
+      "jpegWidth": 1200,
+      "jpegHeight": 800
+    },
+    {
+      "name": "TimeDay.jpg",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 0,
+      "height": 0,
+      "scaleFactor": 100,
+      "pixelFormat": "JPEG",
+      "idiom": 0,
+      "identifier": 15808,
+      "color": null,
+      "jpegWidth": 1400,
+      "jpegHeight": 583
+    },
+    {
+      "name": "AccentColor",
+      "layout": 1009,
+      "appearance": "UIAppearanceAny",
+      "width": 0,
+      "height": 0,
+      "scaleFactor": 0,
+      "pixelFormat": "",
+      "idiom": 0,
+      "identifier": 20419,
+      "color": {
+        "components": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "srgb8": [
+          0,
+          0,
+          0,
+          255
+        ],
+        "space": "sRGB"
+      }
+    },
+    {
+      "name": "icon.png",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 256,
+      "height": 256,
+      "scaleFactor": 100,
+      "pixelFormat": "ARGB",
+      "idiom": 0,
+      "identifier": 48584,
+      "color": null
+    },
+    {
+      "name": "icon.png",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 256,
+      "height": 256,
+      "scaleFactor": 100,
+      "pixelFormat": "ARGB",
+      "idiom": 0,
+      "identifier": 43210,
+      "color": null
+    },
+    {
+      "name": "graff_logo.png",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 1637,
+      "height": 615,
+      "scaleFactor": 100,
+      "pixelFormat": "ARGB",
+      "idiom": 0,
+      "identifier": 57034,
+      "color": null
+    },
+    {
+      "name": "LaunchBackground",
+      "layout": 1009,
+      "appearance": "UIAppearanceAny",
+      "width": 0,
+      "height": 0,
+      "scaleFactor": 0,
+      "pixelFormat": "",
+      "idiom": 0,
+      "identifier": 995,
+      "color": {
+        "components": [
+          0.76499999,
+          1.0,
+          0.46700001,
+          1.0
+        ],
+        "srgb8": [
+          195,
+          255,
+          119,
+          255
+        ],
+        "space": "sRGB"
+      }
+    },
+    {
+      "name": "icon.png",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 256,
+      "height": 256,
+      "scaleFactor": 100,
+      "pixelFormat": "ARGB",
+      "idiom": 0,
+      "identifier": 2804,
+      "color": null
+    },
+    {
+      "name": "AppIcon",
+      "layout": 1010,
+      "appearance": "UIAppearanceAny",
+      "width": 0,
+      "height": 0,
+      "scaleFactor": 0,
+      "pixelFormat": "",
+      "idiom": 1,
+      "identifier": 6849,
+      "color": null
+    },
+    {
+      "name": "AppIcon-1024.png",
+      "layout": 12,
+      "appearance": "UIAppearanceAny",
+      "width": 1024,
+      "height": 1024,
+      "scaleFactor": 100,
+      "pixelFormat": "ARGB",
+      "idiom": 1,
+      "identifier": 6849,
+      "color": null
+    },
+    {
+      "name": "AccentColor",
+      "layout": 1009,
+      "appearance": "UIAppearanceDark",
+      "width": 0,
+      "height": 0,
+      "scaleFactor": 0,
+      "pixelFormat": "",
+      "idiom": 0,
+      "identifier": 20419,
+      "color": {
+        "components": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "srgb8": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "space": "sRGB"
+      }
+    },
+    {
+      "name": "graff_logo_dark.png",
+      "layout": 12,
+      "appearance": "UIAppearanceDark",
+      "width": 1637,
+      "height": 615,
+      "scaleFactor": 100,
+      "pixelFormat": "ARGB",
+      "idiom": 0,
+      "identifier": 57034,
+      "color": null
+    }
+  ]
+}

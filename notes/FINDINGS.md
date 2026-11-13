@@ -1,0 +1,173 @@
+# IN/OUT 1.0 (3) から回収できたものと、できていないもの
+
+対象は許諾済みの `com.graff.inout` IN/OUT 1.0 build 3 の実行ファイルだけ。公開物は `bin/IN-OUT`（署名領域を外し、広告ユニット ID・mailto の宛先・`embedded.mobileprovision` というファイル名文字列を同長で潰したもの）。元 IPA、`_CodeSignature`、プロビジョニングプロファイル、広告 SDK、フォントは置いていない。
+
+sha256 `11b0cf24cb5beabcc440ab1b54ba8886aee25b9e6caf686009397289d8b3b4a5`、サイズ 6379760。`tools/verify_macos.py` がこの値と命令バイトを見る。
+
+この文書の区分:
+
+- **命令**: `bin/IN-OUT` の機械語を直接読んだ結果
+- **疑似コード**: Ghidra 11.4 の出力。`notes/ghidra/`。元の Swift ではない
+- **再構成**: その証拠から書き直した Swift。`recovered/InOutRecovered.swift`。元ソースの復元ではない
+- **未回収**: 型名や画面の文言だけでは埋めていない
+
+## バイナリの事実
+
+- Mach-O 64-bit、ARM64、`MH_EXECUTE`、優先ロードアドレス `0x100000000`
+- `LC_FUNCTION_STARTS` は 15672。値はファイル先頭からのオフセット（先頭 `0x4000`、末尾 `0x3fc950`）
+- `n_type == 0x0f` の定義シンボルは `__mh_execute_header` だけ。ほかは未定義のインポート
+- chained fixups のセグメント pointer format は 6（`DYLD_CHAINED_PTR_64_OFFSET`）。Ghidra の Mach-O loader も 36904 個の format 6 ポインタを報告した
+- コード署名の load command は dataoff/datasize を 0 にし、署名バイトはファイルから切り落とした
+
+## SwiftUI.View の witness
+
+次のアドレスは単一の `B` で、計算した分岐先が body と一致する。シンボルテーブルにこれらの名前はない。型名は `__swift5_types` のフィールド記述と、以前の witness 追跡を命令で再確認したもの。
+
+| thunk | 命令先 | body の関数サイズ |
+| --- | --- | --- |
+| `0x100071b20` | `0x1000541dc` CalendarTabView.body | 6536 |
+| `0x100028500` | `0x100027b88` SlotTimePicker.body | 892 |
+| `0x100048f9c` | `0x10003cdd8` CalendarDayView.body | 4608 |
+| `0x1000ba040` | `0x1000b2154` IncomeView.body | 2316 |
+| `0x1000c0280` | `0x1000bc9b8` WallEditorView.body | 1536 |
+
+`SlotTimePicker.body` の疑似コードは SwiftUI の `DatePickerComponents` を組む view body で、時刻の正規化ではない。正規化は直後の関数。
+
+## メタデータから分かったモデル
+
+`__swift5_types` / field descriptor / `__swift5_reflstr` から読んだ。これはリフレクションであり、元のソースファイルではない。計算式はここにはない。
+
+給与まわりの入れ物:
+
+- `PayRounding`: `unitMinutes: Int`, `start`, `end`。`RoundingDirection` は `exact` / `up` / `down` / `nearest`
+- `PayTerms`: `method`（`hourly` / `daily`）, `dailyWage`, `bands`, `partWages`, `rounding`, `items`, `effectiveFrom`
+- `NightPremium`: `enabled`, `startMinute`, `endMinute`, `ratePercent`
+- `OvertimePremium`: `enabled`, `thresholdMinutes`, `ratePercent`
+- `HolidayPremium`: `enabled`, `ratePercentByWeekday: [Int]`
+- `BreakRule`: `id`, `overMinutes`, `breakMinutes`
+- `Workplace.customBreaks: Bool`, `breakRules`
+- `PayResult`: `workedMinutes`, `base`, `premium`, `allowance`, `transport`, `deduction`
+- `IncomeWall`: `amount`, `alertMode`, `alertPercent`, `alertRemaining`, `notifiedYear`
+
+`PayRounding` の witness が Codable/hash だった、という以前の観察は今回も崩していない。丸めの式そのものの関数は特定していない。
+
+## 命令と疑似コードで対応が付いた処理
+
+### 法定休憩の初期値 — 回収済み
+
+`0x1000da43c`（312 bytes）。`BreakRule` を 2 つ作り、フィールドオフセットはメタデータの `+0x14` と `+0x18`（`overMinutes` と `breakMinutes`）。即値は次の順。
+
+- `overMinutes = 0x168`（360）、`breakMinutes = 0x2d`（45）
+- `overMinutes = 0x1e0`（480）、`breakMinutes = 0x3c`（60）
+
+配列オブジェクトをグローバル `0x1005d0a40` へ書く。Ghidra の疑似コードも同じ即値と `lRam00000001005d0a40` を出している。オブジェクトポインタのレジスタ割り当ては疑似コード側が崩れているので、ストア先の特定は命令列を優先する。
+
+どの規則を勤務分数に対して選ぶ比較ループは、この初期化関数の中にはない。未回収。
+
+### 勤務先初期値の深夜・残業・休日・休憩 — 回収済み
+
+`0x1000defb8`。疑似コードは `notes/ghidra/workplace_defaults.c`。定数プール `0x10042d680` は int64 で `(1320, 300, 480, 25)`。
+
+- あるフィールド（メタデータ `+0x1c`）: enabled byte `1`、`+8` に 1320、`+16` に 300、`+0x18` に 25。`NightPremium` の並び（enabled, startMinute, endMinute, ratePercent）と一致。1320 分は 22:00、300 分は 05:00
+- 次のフィールド（`+0x20`）: enabled `1`、`+8` に 480、`+16` に 25。`OvertimePremium`（enabled, thresholdMinutes, ratePercent）と一致。480 分は 8 時間
+- 次（`+0x24`）: `[Int]` を count 7 で確保してゼロ埋め、enabled byte は `0`。`HolidayPremium`
+- その次の byte は `0`（`customBreaks == false` の並びに一致）
+- `swift_once(legal_break_defaults)` のあと、グローバル `0x1005d0a40` を次のフィールドへコピー（`breakRules`）
+
+デコード失敗時に定数プール `0x10042d6a0` の `(2000, 1)` を別の入れ物へ書く経路がある。フィールド名まではシンボルで結んでいないので、時給 2000 円だとは断定しない。
+
+ここまでが初期値。時給 × 分 / 60 や割増の加算式は、この関数からは出ていない。
+
+### 分の正規化と時刻ホイール — 回収済み
+
+`0x1000968c4`: 引数を 1440（`0x5a0`）で割った余りにし、負なら 1440 を足す。時は `/ 60`、分は余り。コロン（`0x3a`）と `"%02d"`（レジスタ即値 `0x64323025`）で文字列にする。
+
+`0x100027f04`: SwiftUI `Binding` の wrapped value に同じ 1440/60 分割をかけ、`Calendar.current` で `date(bySettingHour:minute:second:of:matchingPolicy:repeatedTimePolicy:direction:)` を呼ぶ。秒は 0、matchingPolicy は `.nextTime`、repeatedTimePolicy は `.first`、direction は `.forward`。
+
+ドラッグ量から分を増減する式は、body（`0x100027b88`）の疑似コードが view 構築のままで、独立した式としては取り出していない。
+
+### 日付の移動 — 一部回収
+
+`Calendar.date(byAdding:value:to:wrappingComponents:)` の value と component が疑似コード上で読めたもの。wrappingComponents は 0（false）。`weekOfYear` のケースシンボルは got `0x10056bbb0` にあるが、下の週送り関数はそれを読まない。`__weekOffset` というフィールド名はある。オフセットを ±1 する呼び出し元の式は、唯一の caller `0x100210b7c` が引数 `x0` をそのまま渡すだけで、増減そのものは未回収。
+
+- `0x1001b4a94`: `startOfDay(for:)` のあと `Component.day` で -1 と +2
+- `0x1000837d8`: `Component.day` で +14 と -1
+- `0x10006028c`: `dateInterval(of: .month, for:)` と、`Component.day` の -1 および +1
+
+## 週送り — 日数への変換は回収済み
+
+`0x10020499c`（1356 bytes）。唯一の直接呼び出しは `0x100210b7c` で、受け取った `x0` を変えずに渡す。
+
+命令:
+
+- `0x1002049c0` `mov x25, x0`。週数は第1引数
+- `0x100204b40` が got `0x10056bbb8` を読む。これは `Calendar.Component.day`。隣の `0x10056bbb0` は `weekOfYear` だが、この関数は読まない
+- `0x100204b68` から `lsl x8, x25, #3` / `sub x24, x8, x25` / `mov w8, #7` / `smulh`。`x24 = x25 * 7`。上位半分が符号と合わなければ `0x100204ecc` の `brk #1`
+- `0x100204be4` でその積を `x1` に置き、`w3 = 0` で `0x100204bf0` から `Calendar.date(byAdding:value:to:wrappingComponents:)` を呼ぶ
+- 呼ぶ直前の疑似コードは SwiftUI `State.wrappedValue` を `to:` に渡している。`startOfDay` はこの関数の中では呼ばない
+- 加算に成功したあと `0x100204c68` は保存してある週数を 0 と比較し、`mov w8, #3` / `csinc ..., gt`。週数が正なら 1 byte のタグは 3、0 以下なら 1。そのバイトは `LazyState` の setter に渡る。タグの型名はこの関数内に無い
+
+再構成は `InOutRecovered.addingWeeks` と `weekSlideTag`。`tests/WeekShift.swift` はタグと、Foundation の「7日加える」が同じ日付になることを見る。オーバーフローでトラップする点は Swift の `*` と同じで、境界値の実行はしていない。
+
+## 休憩規則の選択 — 比較は回収済み
+
+`0x1000e967c`。引数は分数 `x0` と `BreakRule` の配列 `x1`（個数は `+0x10`）。`overMinutes` はメタデータ `+0x14`、`breakMinutes` は `+0x18`。これは初期化 `0x1000da43c` が書いていたのと同じオフセット。
+
+- `0x1000e9770` `cmp` のあと `b.lt`。`overMinutes < 分数` の要素だけ残す。以上は捨てる
+- 残った中で `0x1000e9904` `cmp` / `b.ge`。今の `overMinutes` が次以上なら置き換えない。つまり最大を採る。同値は先の要素が残る
+- 戻り値はその要素の `breakMinutes`。残らなければ `mov x19, #0` で 0
+
+Ghidra の疑似コードも `field + 0x14 < 引数` と、より大きい `overMinutes` への置き換え、空なら 0 を出している。`notes/ghidra/break_select.c`。
+
+配列の選び方は呼び出し側 `0x1001cee68`。`Workplace` のアクセサ `0x1000e3704`（記述子 `0x10043f630`）の `+0x28` のバイトが 1 なら `+0x2c` の配列、そうでなければグローバル `0x1005d0a40`。初期化が `customBreaks` と `breakRules` を同じ位置に書いている。
+
+この関数に渡す分数の作り方は呼び出しで違う。給与の勤務分数としてはまだ一本化しない。
+
+### 編集画面の開始・終了 — 日跨ぎと 24 時間同値
+
+`0x1001b8770`。対象は `ShiftEntryEditor`（記述子 `0x100440570`、フィールドオフセットはメタデータの 0x10 から 4 バイト刻み）。
+
+- `+0x2c` は `_endMinute`、`+0x28` は `_startMinute`。どちらも `State.wrappedValue`（`0x1003fe414`）で Int を読む。オブジェクトはcallee-savedの `x20` / `x22`
+- `0x1001b8870` の `subs` は終了から開始を引く。オーバーフローはトラップ
+- その差を 1440 で割った余りが負なら 1440 を足す。余り 0 は `0x1001b8a3c` の `csel` で 1440 になる
+
+したがって分単位では端数は出ない。22:00（1320）から 6:00（360）は -960 が 480 になる。開始と終了が同じ分なら 0 ではなく 1440（24時間）として選択関数へ渡る。これは編集画面の入力であり、給与明細の分数ではない。
+
+### 日付の秒 — 0 方向の切り捨て
+
+`0x1001cee68` の `0x1001cf3fc` は `Date.timeIntervalSince` の結果（秒）を 60.0 で割り、`0x1001cf700` の `fcvtzs` で 0 へ切り捨てる。3599.9 秒は 59 分、負の秒は 0 に近づく。
+
+向きは、直接のシンボル xref ではなく ARM64 の Swift 呼び出し規約で確定した。公開 ABI ではインスタンスメソッドの `self` は `x20` に入る（swiftlang `docs/ABI/CallingConventionSummary.rst`、LLVM の `CCIfSwiftSelf` → X20）。この呼び出しの直前で `x20` は `endDate`（セレクタ `0x100596fa0`）をブリッジしたスロット、`x0` は同じオブジェクトの `startDate`（`0x10059abb0`）をブリッジしたスロットである。したがって `endDate.timeIntervalSince(startDate)`、つまり終了から開始を引いた秒を 60 で割り、0 方向へ切り捨てる。
+
+同じ時刻なら 0 分であり、編集画面の「同じ分は 1440」とは違う。日付が翌日なら実経過（24時間を超えうる）になり、1440 への折り返しはしない。これはこの呼び出しの入力であり、時給の式ではない。
+
+`0x1001240fc` は `BreakSpan`（`0x10043fcec`）の配列に対し、秒/60 を `frinta`（最近傍、0 から遠い側へのタイ）して負を 0 に潰し、合計する。`end` のアドレスは計算するが引数レジスタに載せていない。`PayRounding` の unit/start/end ではない。給与の丸めとしては使わない。
+
+`PayRounding` の記述子を adrp する箇所と、アクセサ `0x10013554c` への BL は、以前の探索のとおり無かった。適用は別の入口から見つかった。`TimelineView.Context.date` を読む `0x10026e844` が `0x10011dc04` → `0x10011d530` → `0x100119384` → `0x10011b1d0` を呼ぶ。`0x10011b1d0` は `PayTerms` の field 6（metadata +0x28、`rounding`）から `unitMinutes` と方向バイト +8/+9 を読む。`unitMinutes < 2` またはバイト 0 なら日付をコピーする。そうでなければ `unitMinutes * 60`（検査付き）で `startOfDay` からの秒を割り、1 なら `frintp`、2 なら `frintm`、それ以外は `frinta` して `addingTimeInterval` で戻す。`RoundingDirection` の並びは exact, up, down, nearest。
+
+同じ `0x10026e844` は金額を計算しない。`end.timeIntervalSince(start) <= 0` なら 0、そうでなければ `frinta(asOf の経過秒 * ShiftInstance.breakMinutes / 全体秒)` を `WorkRecord.breakMinutes` に書く。asOf は `shiftEnd < now` のとき終了、そうでなければ now。start/end は予定のまま。
+
+上流は勤務先一覧である。`0x1002616f4` は `start <= 日付 < end` のときだけ 1 秒の `TimelineView` を作り、クロージャ `0x100276528` が `0x10026e844` へ分岐する。比較は start/end を書き戻さない。`0x100267318` は「はじまりまで あと」「終わりまで あと」で、給与の日付ではない。ゲートの日付は `0x100260e08` の戻りで、`now` とは確定していない。休憩按分が読む `Context.date` は、その 1 秒タイムラインの中である。
+
+`0x10011b1d0` はそのレコードを `x0` で受け、コピーされた start から end を 60 秒ずつ進める。`min(now, end)` の書き込みはこの経路に無い。BreakSpan が無ければ支払分は `max(0, 全体分 - breakMinutes)` で、円は `支払分 * 時給 / 60` を `PayResult.base` に足す。8時間・休憩30・時給1000なら計算上 7500 だが、これは画面の読取りではない。時給履歴は `0x1000de424` が末尾から、effectiveFrom の日付がシフト日の startOfDay 以下の最初の `hourlyWage` を返す。日給は `UUID.==` が真のとき base に足し、偽なら「日給」を `dayItemsElsewhere` に足す。交通の支給項目は amount が 1 以上なら transport に一度足す。perPeriod と、transport 以外の kind はこの加算に来ない。nightWork は `nightMinutes > 0` が必要。手当と控除の加算は見つかっていない。表示関数 `0x10026efb0` は base + premium を `numericText` に渡し、同じ関数で「終わりまで あと 」と「円」も作る。構築順であり、画面配置の観察ではない。「いま稼いだお給料」は別関数 `0x10026b214` の accessibility 文言。ゲート日付は `0x100260e08` が同じ Published key path を読み、`end > 日付` のシフトを残したあと、`0x1001c88b0` が day を 1、wrapping false で足す。戻りが今そのものかは未確定。
+
+`selectedBreakMinutes` は上の比較だけ。分数の作り方は含めていない。境界は `tests/BreakSelection.swift`。法定の (360, 45), (480, 60) では 360 分は 0、361 分は 45、480 分は 45、481 分は 60。
+
+## 未回収のまま残しているもの
+
+- 日給加算の下位ビットのフィールド名
+- perDay の前にある UUID と回数。通過後は transport への整数一回加算
+- 手当と控除の加算。live の `numericText` は base + premium で、この2つは入らない
+- ゲート日付が `now` か。履歴が日付順か。全部の時給がシフト日より後のときの戻り
+- 7500円の画面観察。単体テストは式の入力と出力だけである
+- 勤務中の Timeline `by` が 30 秒か 1 秒か。60 秒は金額ループの刻みであり、画面の更新周期ではない
+- 年収の壁の閾値判定。画面文字列と `IncomeWall` のフィールドはある。比較関数は特定していない
+- 週送りの「オフセットを ±1 するボタン」自体。日数への変換は `0x10020499c` で回収済み
+- 30 秒と 1 秒の `PeriodicTimelineSchedule` のどちらが勤務中の表示を更新するか
+- 休憩に渡す分数を、編集画面の 1440 正規化と、日付差の切り捨てのどちらで給与が作るか。勤務中の経路が按分するのは `ShiftInstance.breakMinutes` であり、その分数の作り方ではない
+
+画面文言（「6時間を超えたら45分」など）は上記の初期値と矛盾しないが、それ自体は計算の回収ではない。
+
+## 統合するとき
+
+`recovered/InOutRecovered.swift` は上の回収分だけ。広告は入れていない。製品側の独自機能を置き換えるコードはここには無い。private の ShiftTrack はこの token から 404 で、開いていない。
