@@ -703,6 +703,9 @@ def check_symbols_and_layout(data: bytes) -> None:
     check(struct.unpack_from("<I", data, 0x14D080)[0] == 0x91240108, "pay setting loads 支給の見込み")
     check(struct.unpack_from("<I", data, 0x1F3110)[0] == 0x91188108, "todo loads やることを追加")
     check(struct.unpack_from("<I", data, 0x14636C)[0] == 0x913B4108, "periods loads the empty workplace line")
+    check(struct.unpack_from("<I", data, 0x16AAC8)[0] == 0x52800035, "pay date editor starts the counter at 1")
+    check(struct.unpack_from("<I", data, 0x16AB38)[0] == 0xF10076BF, "pay date editor compares the counter with 29")
+    check(struct.unpack_from("<I", data, 0x16AF84)[0] == 0xF10082BF, "pay date editor compares the counter with 32")
     insets = (
         (0x17BFB4, 0x1E661000, "root all-edge inset 16"),
         (0x24274, 0x1E621000, "tab all-edge inset 4"),

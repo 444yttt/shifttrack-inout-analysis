@@ -28,7 +28,9 @@ descriptor `0x100440b40`、アクセサ `0x10021c788`。専用関数 `0x10021dc9
 
 確定。このアクセサだけを参照する関数が `EdgeInsets.init(_all:)` に 4、8、12、16、20、24 を渡す。20 は `0x10021dc08`。画面の中の位置は未確定。
 
-未確定。積み順、記号。
+確定。`0x100222cec` は小さい文字列の即値で `ellipsis` を、`0x1002263b4` は `chevron.right` を、`Image(systemName:)` に渡す。どちらもこのアクセサだけへ届く。`0x1002216a4` は `chevron.up` か `chevron.down`。選ぶビットの意味は未確定。画面の中の位置は未確定。
+
+未確定。積み順。
 
 ## WorkplaceEditorView
 
