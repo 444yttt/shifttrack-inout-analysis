@@ -10,7 +10,7 @@ descriptor `0x10043e520`、アクセサ `0x100071b0c`。専用関数 `0x10006215
 
 確定。選んだ日へ `ShiftPart` を置く処理は、日チップ `0x10003fe54` とパターン行 `0x10006e04c` から確定処理 `0x100014370`、配置 `0x1001c75ec` へ進む。詳細は `logic.md`。
 
-部分。`0x100067fec` と `0x10006852c` は「月の収入見込み」「シフトパターンを編集」を読む。body の範囲の外である。`0x100058000` は `CalendarTabView` だけを呼び、`DragGesture`、`LazyVGrid`、`LazyVStack`、`sensoryFeedback` がある。ドラッグの最小距離の即値は、この関数では見ていない。
+部分。`0x100067fec` と `0x10006852c` は「月の収入見込み」「シフトパターンを編集」を読む。body の範囲の外である。`0x100058000` は `CalendarTabView` だけを呼び、`DragGesture`、`LazyVGrid`、`LazyVStack`、`sensoryFeedback` がある。`0x1000587c8` の `fmov d0, #30` の直後、`0x1000587e0` が `DragGesture` の `minimumDistance` を呼ぶ。この 30 は、その距離である。
 
 確定。`plus` の `Image(systemName:)` は `0x10006be48` と `0x10006e650`。呼び出し元を辿ると、この画面のアクセサだけに届く。`0x100066e2c` も `Image(systemName:)` だが、渡す 29 バイトは UTF-8 として読めない。0x20 後ろの `exclamationmark.triangle.fill` は引数にしていない。
 

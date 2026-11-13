@@ -706,6 +706,13 @@ def check_symbols_and_layout(data: bytes) -> None:
     check(struct.unpack_from("<I", data, 0x16AAC8)[0] == 0x52800035, "pay date editor starts the counter at 1")
     check(struct.unpack_from("<I", data, 0x16AB38)[0] == 0xF10076BF, "pay date editor compares the counter with 29")
     check(struct.unpack_from("<I", data, 0x16AF84)[0] == 0xF10082BF, "pay date editor compares the counter with 32")
+    detail_link = branch_target(struct.unpack_from("<I", data, 0x147C04)[0], 0x100147C04)
+    check(detail_link == 0x1003FD514, "detail function builds a NavigationLink")
+    detail_acc = branch_target(struct.unpack_from("<I", data, 0x147958)[0], 0x100147958)
+    check(detail_acc == 0x100153ED8, "that function calls PayPeriodDetailView")
+    check(struct.unpack_from("<I", data, 0x587C8)[0] == 0x1E67D000, "calendar tab drag distance is 30")
+    cal_drag = branch_target(struct.unpack_from("<I", data, 0x587E0)[0], 0x1000587E0)
+    check(cal_drag == 0x1003FD2A4, "calendar tab passes that distance to DragGesture")
     insets = (
         (0x17BFB4, 0x1E661000, "root all-edge inset 16"),
         (0x24274, 0x1E621000, "tab all-edge inset 4"),
