@@ -713,6 +713,24 @@ def check_symbols_and_layout(data: bytes) -> None:
     check(struct.unpack_from("<I", data, 0x587C8)[0] == 0x1E67D000, "calendar tab drag distance is 30")
     cal_drag = branch_target(struct.unpack_from("<I", data, 0x587E0)[0], 0x1000587E0)
     check(cal_drag == 0x1003FD2A4, "calendar tab passes that distance to DragGesture")
+    breakdown_body = 0x1004308E4 + struct.unpack_from("<i", data, 0x4308E4)[0]
+    check(breakdown_body == 0x100115AD4, "PayBreakdownView witness points at its body")
+    content = branch_target(struct.unpack_from("<I", data, 0x115B28)[0], 0x100115B28)
+    check(content == 0x1001138B4, "breakdown body calls its content function")
+    check(data[0x4FDBC0:0x4FDBC0 + 18] == "勤務日に支給".encode(), "breakdown label bytes")
+    check(struct.unpack_from("<I", data, 0x114054)[0] == 0xD100811C, "breakdown label starts 0x20 before the next cstring")
+    check(struct.unpack_from("<I", data, 0x114094)[0] == 0xD2800249, "breakdown label length starts at 18")
+    check(struct.unpack_from("<I", data, 0x113D4C)[0] == 0x1E655000, "breakdown design size 13")
+    scale = branch_target(struct.unpack_from("<I", data, 0x113D50)[0], 0x100113D50)
+    check(scale == 0x1004110C0, "breakdown passes 13 to scaledValueForValue:")
+    check(struct.unpack_from("<I", data, 0x1158AC)[0] == 0x1E661000, "breakdown design size 16")
+    scale = branch_target(struct.unpack_from("<I", data, 0x1158B0)[0], 0x1001158B0)
+    check(scale == 0x1004110C0, "breakdown passes 16 to scaledValueForValue:")
+    check(data[0x4E7A89:0x4E7A89 + 20] == b"scaledValueForValue:", "scaledValue selector")
+    unconf_body = 0x100433650 + struct.unpack_from("<i", data, 0x433650)[0]
+    check(unconf_body == 0x100151348, "UnconfirmedShiftsView witness points at its body")
+    sheet = branch_target(struct.unpack_from("<I", data, 0x15167C)[0], 0x10015167C)
+    check(sheet == 0x1003FE1EC, "unconfirmed body builds a sheet")
     insets = (
         (0x17BFB4, 0x1E661000, "root all-edge inset 16"),
         (0x24274, 0x1E621000, "tab all-edge inset 4"),
